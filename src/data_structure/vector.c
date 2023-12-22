@@ -1,22 +1,14 @@
 #include "data_structure/vector.h"
-#include "stdlib.h"
 #include "assert.h"
 #include "stdio.h"
+#include "stdlib.h"
 #include <string.h>
 
 const int DEFAULT_INITIAL_CAPACITY = 16;
 
-void vector_validate(Vector *vec) {
-  assert(vec && "vec must not be null");
-  assert(vec->data && "vec data must not be null");
-  assert(vec->capacity >= vec->size && "vec capacity must be >= size");
-}
+Vector *vector_new() { return vector_newn(DEFAULT_INITIAL_CAPACITY); }
 
-Vector *vector_new() {
-  return vector_newn(DEFAULT_INITIAL_CAPACITY);
-}
-
-Vector *vector_newn(int n) {
+Vector *vector_newn(unsigned n) {
   Vector *vec = malloc(sizeof(Vector));
   *vec = (Vector){
       .data = malloc(sizeof(void *) * n),
@@ -34,6 +26,16 @@ void vector_push(Vector *vec, void *val) {
   }
   vec->data[vec->size] = val;
   vec->size += 1;
+}
+
+void *vector_pop_back(Vector *vec) {
+  vector_validate(vec);
+  if (vec->size == 0) {
+    return nullptr;
+  }
+  void *back = vec->data[vec->size - 1];
+  vec->size -= 1;
+  return back;
 }
 
 bool vector_contains(Vector *vec, void *val) {
@@ -59,3 +61,10 @@ void vector_free(Vector *vec) {
   free(vec->data);
   free(vec);
 }
+
+void vector_validate(Vector *vec) {
+  assert(vec && "vec must not be null");
+  assert(vec->data && "vec data must not be null");
+  assert(vec->capacity >= vec->size && "vec capacity must be >= size");
+}
+

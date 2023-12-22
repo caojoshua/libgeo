@@ -1,5 +1,6 @@
 add_executable(
   hello_test
+  priority_queue.cpp
   vector.cpp
   )
 
