@@ -272,20 +272,128 @@ void red_black_tree_insert(RedBlackTree *tree, void *val) {
   }
 }
 
-bool node_contains(Node *n, void *val, cmp_t cmp) {
+Node *node_search(Node *n, void *val, cmp_t cmp) {
   if (!n) {
-    return false;
+    return NULL;
   }
   if (cmp(val, n->val) == EQUALS) {
-    return true;
+    return n;
   }
   Node *nextn = cmp(val, n->val) == LEFT ? n->left : n->right;
-  return node_contains(nextn, val, cmp);
+  return node_search(nextn, val, cmp);
 }
 
 bool red_black_tree_contains(RedBlackTree *tree, void *val) {
   red_black_tree_validate(tree);
-  return node_contains(tree->root, val, tree->cmp);
+  return node_search(tree->root, val, tree->cmp);
+}
+
+Node *node_leftmost(Node *n) {
+  assert(n);
+  while(n->left) {
+    n = n->left;
+  }
+  return n;
+}
+
+// Finds the right most node in the subtree rooted at n
+Node *node_rightmost(Node *n) {
+  assert(n);
+  while(n->right) {
+    n = n->right;
+  }
+  return n;
+}
+
+// Find the nearest parent of n that is a predecessor/successor of val.
+// TODO: this is weird with duplicates values. should just not support it.
+Optional node_parent_predsucc(Node *n, void *val, cmp_t cmp, Ordering ord) {
+  n = n->parent;
+  while (n) {
+    if (cmp(n->val, val) == ord) {
+      return optional(n->val);
+    }
+    n = n->parent;
+  }
+  return optional_null();
+}
+
+Optional node_pred(Node *n, void *val, cmp_t cmp) {
+  assert(n && "cannot find pred from null node");
+
+  Ordering comparison = cmp(val, n->val);
+  if (comparison == EQUALS) {
+    // Found the node for val
+    if (n->left) {
+      // n has a left node. The pred is the rightmost node in the
+      // subtree rooted at the left subnode.
+      return optional(node_rightmost(n->left)->val);
+    }
+    // n does not have a left node. Find the nearest parent that is a pred.
+    return node_parent_predsucc(n, val, cmp, LESS);
+  }
+
+  if (comparison == LESS) {
+    if (n->left) {
+      return node_pred(n->left, val, cmp);
+    }
+    // Child does not exist. Find the nearest parent that is a pred.
+    return node_parent_predsucc(n, val, cmp, LESS);
+  }
+
+  // comparison == GREATER
+  if (n->right) {
+    return node_pred(n->right, val, cmp);
+  }
+  // Child does not exist. The pred is n itself
+  return optional(n->val);
+}
+
+Optional red_black_tree_pred(RedBlackTree *tree, void *val) {
+  red_black_tree_validate(tree);
+  if (!tree->root) {
+    return optional_null();
+  }
+  return node_pred(tree->root, val, tree->cmp);
+}
+
+Optional node_succ(Node *n, void *val, cmp_t cmp) {
+  assert(n && "cannot find succ from null node");
+
+  Ordering comparison = cmp(val, n->val);
+  if (comparison == EQUALS) {
+    // Found the node for val
+    if (n->right) {
+      // n has a left node. The succ is the leftmost node in the
+      // subtree rooted at the left subnode.
+      return optional(node_leftmost(n->right)->val);
+    }
+    // n does not have a left node. Find the nearest parent that is a succ.
+    return node_parent_predsucc(n, val, cmp, GREATER);
+  }
+
+  if (comparison == GREATER) {
+    if (n->right) {
+      return node_succ(n->right, val, cmp);
+    }
+    // Child does not exist. Find the nearest parent that is a succ.
+    return node_parent_predsucc(n, val, cmp, GREATER);
+  }
+
+  // comparison == LESS
+  if (n->left) {
+    return node_succ(n->left, val, cmp);
+  }
+  // Child does not exist. The succ is n itself
+  return optional(n->val);
+}
+
+Optional red_black_tree_succ(RedBlackTree *tree, void *val) {
+  red_black_tree_validate(tree);
+  if (!tree->root) {
+    return optional_null();
+  }
+  return node_succ(tree->root, val, tree->cmp);
 }
 
 // Validates property 3 as listed at the top of the file, and binary tree
