@@ -245,7 +245,7 @@ Node *fixup(Node *n) {
 
 Node *node_insert(Node *n, void *val, cmp_t cmp) {
   assert(n && "RBTree: cannot insert to null node");
-  Direction direction = cmp(val, n->val) ? LEFT : RIGHT;
+  Direction direction = cmp(val, n->val) == LESS ? LEFT : RIGHT;
   Node **child = direction == LEFT ? &n->left : &n->right;
 
   if (*child) {
@@ -276,10 +276,10 @@ bool node_contains(Node *n, void *val, cmp_t cmp) {
   if (!n) {
     return false;
   }
-  if (n->val == val) {
+  if (cmp(val, n->val) == EQUALS) {
     return true;
   }
-  Node *nextn = cmp(val, n->val) ? n->left : n->right;
+  Node *nextn = cmp(val, n->val) == LEFT ? n->left : n->right;
   return node_contains(nextn, val, cmp);
 }
 
@@ -288,6 +288,10 @@ bool red_black_tree_contains(RedBlackTree *tree, void *val) {
   return node_contains(tree->root, val, tree->cmp);
 }
 
+// Validates property 3 as listed at the top of the file, and binary tree
+// ordering properties.
+// TODO: We allow equivalent nodes. C++'s sets are just RBTrees that do not
+// allow equivalent elements. Need to think about our use cases.
 void node_validate(Node *n, cmp_t cmp) {
   assert(n && "cannot validate null node");
   if (n->color == RED) {
@@ -297,13 +301,15 @@ void node_validate(Node *n, cmp_t cmp) {
                             "red node's right child should be black");
   }
   if (n->left) {
-    assert(cmp(n->left->val, n->val) &&
-           "parent node must be \"greater than\" left child node");
+    Ordering order = cmp(n->val, n->left->val);
+    assert((order == GREATER || order == EQUALS) &&
+           "parent node must be >= left child node");
     node_validate(n->left, cmp);
   }
   if (n->right) {
-    assert(cmp(n->val, n->right->val) &&
-           "parent node must be \"less than\" left child node");
+    Ordering order = cmp(n->val, n->right->val);
+    assert(order == LESS ||
+           order == EQUALS && "parent node must be <= right child node");
     node_validate(n->right, cmp);
   }
 }

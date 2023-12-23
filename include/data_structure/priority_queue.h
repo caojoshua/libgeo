@@ -1,15 +1,8 @@
 #ifndef PRIORITY_QUEUE_H
 #define PRIORITY_QUEUE_H
 
+#include "comparator.h"
 #include "vector.h"
-
-typedef bool(*cmp_t)(void *, void *);
-static bool less_than_cmp(void *a, void *b) {
-  return a < b;
-}
-static bool greater_than_cmp(void *a, void *b) {
-  return a > b;
-}
 
 typedef struct {
   Vector *vec;

@@ -1,8 +1,7 @@
 #ifndef RED_BLACK_TREE_H
 #define RED_BLACK_TREE_H
 
-typedef bool (*cmp_t)(void *, void *);
-static bool less_than_cmp(void *a, void *b) { return a < b; }
+#include "data_structure/comparator.h"
 
 typedef struct RedBlackNode RedBlackNode;
 

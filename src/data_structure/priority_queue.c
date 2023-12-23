@@ -25,7 +25,7 @@ void bubble_up(PriorityQueue *pq, unsigned index) {
 
   unsigned parent_index = (index - 1) / 2;
   void **data = pq->vec->data;
-  if (pq->cmp(data[index], data[parent_index])) {
+  if (pq->cmp(data[index], data[parent_index]) == LESS) {
     swap(&data[index], &data[parent_index]);
     bubble_up(pq, parent_index);
   }
@@ -49,16 +49,17 @@ void bubble_down(PriorityQueue *pq, unsigned index) {
 
   if (left_index == pq->vec->size - 1) {
     // left child is the last element in the queue
-    if (pq->cmp(data[left_index], data[index])) {
+    if (pq->cmp(data[left_index], data[index]) == LESS) {
       swap(&data[index], &data[left_index]);
     }
     return;
   }
 
   unsigned right_index = left_index + 1;
-  unsigned min_index =
-      pq->cmp(data[left_index], data[right_index]) ? left_index : right_index;
-  if (pq->cmp(data[min_index], data[index])) {
+  unsigned min_index = pq->cmp(data[left_index], data[right_index]) == LESS
+                           ? left_index
+                           : right_index;
+  if (pq->cmp(data[min_index], data[index]) == LESS) {
     swap(&data[index], &data[min_index]);
     bubble_down(pq, min_index);
   }
