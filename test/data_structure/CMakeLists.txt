@@ -1,6 +1,7 @@
 add_executable(
   hello_test
   priority_queue.cpp
+  red_black_tree.cpp
   vector.cpp
   )
 
