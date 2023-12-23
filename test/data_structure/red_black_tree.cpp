@@ -7,29 +7,35 @@ extern "C" {
 static const unsigned STRIDE = 5;
 
 void test_contains_range(RedBlackTree *tree, unsigned n) {
+  ASSERT_GT(n, 0);
   for (unsigned long i = 0; i < n; ++i) {
     ASSERT_TRUE(red_black_tree_contains(tree, (void *)i));
     if (i > 0) {
-      // Test predecessor
       Optional pred = red_black_tree_pred(tree, (void *)i);
       ASSERT_TRUE(pred.present);
-      ASSERT_EQ(pred.val, (void *)(i - 1));
+      ASSERT_EQ((long)pred.val, (i - 1));
     }
-    if (i > 0 && i < n - 1) {
-      // Test successor
+    if (i < n - 1) {
       Optional succ = red_black_tree_succ(tree, (void *)i);
       ASSERT_TRUE(succ.present);
-      ASSERT_EQ(succ.val, (void *)(i + 1));
+      ASSERT_EQ((long)succ.val, (i + 1));
     }
   }
 
   EXPECT_FALSE(red_black_tree_contains(tree, (void *)-1));
   EXPECT_FALSE(red_black_tree_contains(tree, (void *)(long)(n)));
 
+  Optional min = red_black_tree_min(tree);
+  EXPECT_TRUE(min.present);
+  EXPECT_EQ((long)min.val, 0);
+  Optional max = red_black_tree_max(tree);
+  EXPECT_TRUE(max.present);
+  EXPECT_EQ((long)max.val, n - 1);
+
   EXPECT_FALSE(red_black_tree_pred(tree, NULL).present);
   Optional pred = red_black_tree_pred(tree, (void *)(long)(n));
   EXPECT_TRUE(pred.present);
-  EXPECT_EQ(pred.val, (void *)(long)(n - 1));
+  EXPECT_EQ((long)pred.val, (long)(n - 1));
 }
 
 void rb_tree_test_increasing(unsigned n) {
@@ -53,21 +59,40 @@ void rb_tree_test_decreasing(unsigned n) {
 }
 
 void test_contains_range_stride(RedBlackTree *tree, unsigned n) {
-  EXPECT_FALSE(red_black_tree_pred(tree, NULL).present);
-  for (unsigned long i = STRIDE; i < n; i += STRIDE) {
+  if (n <= STRIDE) {
+    return;
+  }
+
+  unsigned remainder = n % STRIDE;
+  unsigned max_val = remainder == 0 ? n - STRIDE : n - remainder;
+
+  for (unsigned long i = STRIDE; i <= max_val; i += STRIDE) {
     ASSERT_TRUE(red_black_tree_contains(tree, (void *)i));
     for (unsigned j = i + 1; j <= i + STRIDE; ++j) {
       Optional pred = red_black_tree_pred(tree, (void *)(long)j);
       ASSERT_TRUE(pred.present);
-      ASSERT_EQ(pred.val, (void *)(i));
+      ASSERT_EQ((long)pred.val, i);
+
+      Optional succ = red_black_tree_succ(tree, (void *)(long)(j - STRIDE - 1));
+      EXPECT_TRUE(succ.present);
+      EXPECT_EQ((long)succ.val, i);
     }
   }
+
   EXPECT_FALSE(red_black_tree_contains(tree, (void *)-1));
+  EXPECT_FALSE(red_black_tree_contains(tree, (void *)(long)(max_val + 1)));
   EXPECT_FALSE(red_black_tree_contains(tree, (void *)(long)(n + STRIDE)));
-  if (n > STRIDE) {
-    Optional pred = red_black_tree_pred(tree, (void *)(long)(n + STRIDE));
-    ASSERT_TRUE(pred.present);
-  }
+
+  EXPECT_FALSE(red_black_tree_pred(tree, NULL).present);
+  Optional pred = red_black_tree_pred(tree, (void *)(long)(n + STRIDE));
+  ASSERT_TRUE(pred.present);
+
+  Optional min = red_black_tree_min(tree);
+  EXPECT_TRUE(min.present);
+  EXPECT_EQ((long)min.val, STRIDE);
+  Optional max = red_black_tree_max(tree);
+  EXPECT_TRUE(max.present);
+  EXPECT_EQ((long)max.val, max_val);
 }
 
 void rb_tree_test_increasing_stride(unsigned n) {
@@ -102,6 +127,19 @@ void rb_tree_test_length(unsigned n) {
   rb_tree_test_increasing_stride(n);
   rb_tree_test_random(n);
 }
+
+TEST(RedBlackTree, Empty) {
+  RedBlackTree *tree = red_black_tree_new();
+  EXPECT_FALSE(tree->root);
+  EXPECT_EQ(tree->size, 0);
+  EXPECT_FALSE(red_black_tree_min(tree).present);
+  EXPECT_FALSE(red_black_tree_max(tree).present);
+  EXPECT_FALSE(red_black_tree_contains(tree, NULL));
+  EXPECT_FALSE(red_black_tree_contains(tree, (void *)0xBA5));
+  EXPECT_FALSE(red_black_tree_contains(tree, (void *)0xF00));
+  red_black_tree_validate_expensive(tree);
+}
+
 
 TEST(RedBlackTree, TriangleRotationRight) {
   RedBlackTree *tree = red_black_tree_new();
@@ -146,6 +184,7 @@ TEST(RedBlackTree, Length6) { rb_tree_test_length(6); }
 TEST(RedBlackTree, Length8) { rb_tree_test_length(8); }
 TEST(RedBlackTree, Length16) { rb_tree_test_length(16); }
 TEST(RedBlackTree, Length128) { rb_tree_test_length(128); }
+TEST(RedBlackTree, Length500) { rb_tree_test_length(500); }
 TEST(RedBlackTree, Length1234) { rb_tree_test_length(1234); }
 TEST(RedBlackTree, LengthBar) { rb_tree_test_length(0xBA5); }
 TEST(RedBlackTree, LengthFoo) { rb_tree_test_length(0xF00); }

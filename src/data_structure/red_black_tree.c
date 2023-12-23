@@ -305,6 +305,22 @@ Node *node_rightmost(Node *n) {
   return n;
 }
 
+Optional red_black_tree_min(RedBlackTree *tree) {
+  red_black_tree_validate(tree);
+  if (!tree->root) {
+    return optional_null();
+  }
+  return optional(node_leftmost(tree->root)->val);
+}
+
+Optional red_black_tree_max(RedBlackTree *tree) {
+  red_black_tree_validate(tree);
+  if (!tree->root) {
+    return optional_null();
+  }
+  return optional(node_rightmost(tree->root)->val);
+}
+
 // Find the nearest parent of n that is a predecessor/successor of val.
 // TODO: this is weird with duplicates values. should just not support it.
 Optional node_parent_predsucc(Node *n, void *val, cmp_t cmp, Ordering ord) {
