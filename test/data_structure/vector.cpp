@@ -3,7 +3,7 @@ extern "C" {
 }
 #include <gtest/gtest.h>
 
-void test_basic(Vector *vec) {
+void vector_test_basic(Vector *vec) {
   const unsigned SIZE = 100;
   ASSERT_EQ(vec->size, 0);
   for (long i = 0; i < SIZE; ++i) {
@@ -18,12 +18,12 @@ void test_basic(Vector *vec) {
 
 TEST(VectorTest, Basic) {
   Vector *vec = vector_new();
-  test_basic(vec);
+  vector_test_basic(vec);
 }
 
 TEST(VectorTest, InitialCapacity) {
   Vector *vec = vector_newn(22);
-  test_basic(vec);
+  vector_test_basic(vec);
 }
 
 TEST(VectorTest, CapacityDoubles) {

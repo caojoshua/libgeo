@@ -3,7 +3,7 @@ extern "C" {
 }
 #include <gtest/gtest.h>
 
-void test_pop_order(PriorityQueue *pq, unsigned n) {
+void priority_queue_test_pop_order(PriorityQueue *pq, unsigned n) {
   for (unsigned long i = 0; i < n; ++i) {
     ASSERT_EQ((long)priority_queue_pop(pq), i);
     ASSERT_EQ(pq->vec->size, n - i - 1);
@@ -11,25 +11,25 @@ void test_pop_order(PriorityQueue *pq, unsigned n) {
   priority_queue_free(pq);
 }
 
-void test_increasing(unsigned n) {
+void priority_queue_test_increasing(unsigned n) {
   PriorityQueue *pq = priority_queue_new();
   for (unsigned long i = 0; i < n; ++i) {
     priority_queue_push(pq, (void *)i);
     ASSERT_EQ(pq->vec->size, i + 1);
   }
-  test_pop_order(pq, n);
+  priority_queue_test_pop_order(pq, n);
 }
 
-void test_decreasing(unsigned n) {
+void priority_queue_test_decreasing(unsigned n) {
   PriorityQueue *pq = priority_queue_new();
   for (unsigned long i = n; i > 0; --i) {
     priority_queue_push(pq, (void *)(i - 1));
     ASSERT_EQ(pq->vec->size, n - i + 1);
   }
-  test_pop_order(pq, n);
+  priority_queue_test_pop_order(pq, n);
 }
 
-void test_random(unsigned n) {
+void priority_queue_test_random(unsigned n) {
   PriorityQueue *pq = priority_queue_new();
   for (unsigned long i = 0; i < n; ++i) {
     priority_queue_push(pq, (void *)(long)rand());
@@ -45,11 +45,11 @@ void test_random(unsigned n) {
   priority_queue_free(pq);
 }
 
-void test_length(unsigned n) {
+void priority_queue_test_length(unsigned n) {
   srand(time(NULL));
-  test_increasing(n);
-  test_decreasing(n);
-  test_random(n);
+  priority_queue_test_increasing(n);
+  priority_queue_test_decreasing(n);
+  priority_queue_test_random(n);
 }
 
 TEST(PriorityQueueTest, Length0) {
@@ -83,7 +83,9 @@ TEST(PriorityQueueTest, opposite) {
   priority_queue_free(pq);
 }
 
-TEST(PriorityQueueTest, Length3) { test_length(3); }
-TEST(PriorityQueueTest, Length4) { test_length(4); }
-TEST(PriorityQueueTest, Length8) { test_length(8); }
-TEST(PriorityQueueTest, Length128) { test_length(128); }
+TEST(PriorityQueueTest, Length3) { priority_queue_test_length(3); }
+TEST(PriorityQueueTest, Length4) { priority_queue_test_length(4); }
+TEST(PriorityQueueTest, Length8) { priority_queue_test_length(8); }
+TEST(PriorityQueueTest, Length128) { priority_queue_test_length(128); }
+TEST(PriorityQueueTest, LengthBar) { priority_queue_test_length(0xBA5); }
+TEST(PriorityQueueTest, LengthFoo) { priority_queue_test_length(0xF00); }
