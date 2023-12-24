@@ -32,7 +32,9 @@
 //
 #include "data_structure/red_black_tree.h"
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <sys/param.h>
 
 typedef enum {
   BLACK,
@@ -290,7 +292,7 @@ bool red_black_tree_contains(RedBlackTree *tree, void *val) {
 
 Node *node_leftmost(Node *n) {
   assert(n);
-  while(n->left) {
+  while (n->left) {
     n = n->left;
   }
   return n;
@@ -299,7 +301,7 @@ Node *node_leftmost(Node *n) {
 // Finds the right most node in the subtree rooted at n
 Node *node_rightmost(Node *n) {
   assert(n);
-  while(n->right) {
+  while (n->right) {
     n = n->right;
   }
   return n;
@@ -412,11 +414,11 @@ Optional red_black_tree_succ(RedBlackTree *tree, void *val) {
   return node_succ(tree->root, val, tree->cmp);
 }
 
-// Validates property 3 as listed at the top of the file, and binary tree
-// ordering properties.
+// Validates property 3 as listed at the top of the file, binary tree
+// ordering properties, and that the tree is balanced.
 // TODO: We allow equivalent nodes. C++'s sets are just RBTrees that do not
 // allow equivalent elements. Need to think about our use cases.
-void node_validate(Node *n, cmp_t cmp) {
+unsigned node_validate(Node *n, cmp_t cmp) {
   assert(n && "cannot validate null node");
   if (n->color == RED) {
     assert(!n->left ||
@@ -424,18 +426,36 @@ void node_validate(Node *n, cmp_t cmp) {
     assert(!n->right || n->right->color == BLACK &&
                             "red node's right child should be black");
   }
+
+  unsigned left_height = 0;
+  unsigned right_height = 0;
   if (n->left) {
     Ordering order = cmp(n->val, n->left->val);
     assert((order == GREATER || order == EQUALS) &&
            "parent node must be >= left child node");
-    node_validate(n->left, cmp);
+    left_height = 1 + node_validate(n->left, cmp);
   }
   if (n->right) {
     Ordering order = cmp(n->val, n->right->val);
     assert(order == LESS ||
            order == EQUALS && "parent node must be <= right child node");
-    node_validate(n->right, cmp);
+    right_height = 1 + node_validate(n->right, cmp);
   }
+
+  unsigned shorter_height;
+  unsigned taller_height;
+  if (left_height > right_height) {
+    shorter_height = right_height;
+    taller_height = left_height;
+  } else {
+    shorter_height = left_height;
+    taller_height = right_height;
+  }
+  assert(taller_height + 1 <= (shorter_height + 1) * 2 &&
+         "taller subtree's height should be bounded by twice the height of "
+         "the shorter subtree's height");
+
+  return MAX(left_height, right_height);
 }
 
 // Validates tree. Cannot be called in the middle of tree transformations i.e
