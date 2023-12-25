@@ -108,6 +108,57 @@ void node_adopt(Node *parent, Node *child, Direction direction) {
   }
 }
 
+// Rotate about node `n`(N in the diagram). When rotating in n about a direction,
+// the child in the opposite direction must not be null, and it will become the
+// new parent of `n`.
+//
+// Example left rotation about N
+// P
+//  \
+//   N
+//  / \
+// a   C
+//    / \
+//   b   c
+//
+// Rotates into:
+//   P
+//    \
+//     C
+//    / \
+//   N   c
+//  / \
+// a   b
+//
+void node_rotate(Node *n, Direction d) {
+  assert(n);
+  Node *parent = n->parent;
+  Direction parent_direction;
+  if (parent) {
+    parent_direction = node_parent_direction(n);
+  }
+
+  Node *child;
+  if (d == LEFT) {
+    child = n->right;
+    assert(child &&
+           "When rotating about `n` left, `n`'s right child must exist");
+    node_adopt(n, child->left, RIGHT);
+  } else {
+    child = n->left;
+    assert(child &&
+           "When rotating about `n` right, `n`'s left child must exist");
+    node_adopt(n, child->right, LEFT);
+  }
+
+  node_adopt(child, n, d);
+  if (parent) {
+    node_adopt(parent, child, parent_direction);
+  } else {
+    child->parent = NULL;
+  }
+}
+
 // Node n might be violating red black tree properties. Fixup rotates and
 // re-colors the tree to restore correctness of the properties.
 //
@@ -125,9 +176,7 @@ void node_adopt(Node *parent, Node *child, Direction direction) {
 // After transformations, the labels do not change to demonstrate where nodes
 // end up. The colors may change to demonstrate recoloring.
 //
-// Returns the root node. If there is no new root node, this may either return
-// that root, or return NULL.
-Node *fixup(Node *n) {
+Node *insert_fixup(Node *n) {
   assert(n && "cannot fixup null node");
   assert(n->color == RED && "only fixup RED nodes");
 
@@ -164,7 +213,7 @@ Node *fixup(Node *n) {
     grandparent->color = RED;
     parent->color = BLACK;
     uncle->color = BLACK;
-    return fixup(grandparent);
+    return insert_fixup(grandparent);
   }
 
   // GP, P and N form a triangle. Transform it into a line. It then undergoes
@@ -189,15 +238,7 @@ Node *fixup(Node *n) {
   Direction grandparent_direction = node_parent_direction(parent);
   if (parent_direction != grandparent_direction) {
     // If directions are opposite, then it is a triangle
-    if (parent_direction == LEFT) {
-      node_adopt(grandparent, n, RIGHT);
-      node_adopt(parent, n->right, LEFT);
-      node_adopt(n, parent, RIGHT);
-    } else {
-      node_adopt(grandparent, n, LEFT);
-      node_adopt(parent, n->left, RIGHT);
-      node_adopt(n, parent, LEFT);
-    }
+    node_rotate(parent, grandparent_direction);
     // Swap n and parent in preparation for the straight line transformation
     Node *t = n;
     n = parent;
@@ -222,20 +263,7 @@ Node *fixup(Node *n) {
   //   / \
   // U.b  a
   //
-  Direction opposite = opposite_direction(grandparent_direction);
-
-  Node *great_grandparent = grandparent->parent;
-  if (great_grandparent) {
-    node_adopt(great_grandparent, parent, node_parent_direction(grandparent));
-  } else {
-    // No GPP. Make P the new root
-    parent->parent = nullptr;
-  }
-
-  node_adopt(grandparent,
-             grandparent_direction == LEFT ? parent->right : parent->left,
-             grandparent_direction);
-  node_adopt(parent, grandparent, opposite);
+  node_rotate(grandparent, opposite_direction(grandparent_direction));
 
   grandparent->color = RED;
   parent->color = BLACK;
@@ -258,7 +286,7 @@ Node *node_insert(Node *n, void *val, cmp_t cmp) {
   // Child does not exist. Insert the node and fixup.
   *child = node_new(val, RED);
   node_adopt(n, *child, direction);
-  return fixup(*child);
+  return insert_fixup(*child);
 }
 
 void red_black_tree_insert(RedBlackTree *tree, void *val) {
