@@ -38,6 +38,21 @@ void test_contains_range(RedBlackTree *tree, unsigned n) {
   EXPECT_EQ((long)pred.val, (long)(n - 1));
 }
 
+void test_delete_range(RedBlackTree *tree, unsigned n) {
+  ASSERT_GT(n, 0);
+  for (unsigned long i = 0; i < n; i += STRIDE) {
+    red_black_tree_delete(tree, (void *)i);
+  }
+  for (unsigned long i = 0; i < n; ++i) {
+    bool contains = red_black_tree_contains(tree, (void *)i);
+    if (i % STRIDE == 0) {
+      ASSERT_FALSE(contains);
+    } else {
+      ASSERT_TRUE(contains);
+    }
+  }
+}
+
 void rb_tree_test_increasing(unsigned n) {
   RedBlackTree *tree = red_black_tree_new();
   for (unsigned long i = 0; i < n; ++i) {
@@ -45,6 +60,7 @@ void rb_tree_test_increasing(unsigned n) {
     ASSERT_EQ(tree->size, i + 1);
   }
   test_contains_range(tree, n);
+  test_delete_range(tree, n);
   red_black_tree_validate_expensive(tree);
 }
 
@@ -55,6 +71,7 @@ void rb_tree_test_decreasing(unsigned n) {
     ASSERT_EQ(tree->size, n - i + 1);
   }
   test_contains_range(tree, n);
+  test_delete_range(tree, n);
   red_black_tree_validate_expensive(tree);
 }
 
@@ -118,6 +135,18 @@ void rb_tree_test_random(unsigned n) {
   for (unsigned i = 0; i < n; ++i) {
     ASSERT_TRUE(red_black_tree_contains(tree, numbers->data[i]));
   }
+
+  for (unsigned i = 0; i < n; i += STRIDE) {
+    red_black_tree_delete(tree, (void *)(long)numbers->data[i]);
+  }
+  for (unsigned i = 0; i < n; ++i) {
+    if (i % STRIDE == 0) {
+      ASSERT_FALSE(red_black_tree_contains(tree, numbers->data[i]));
+    } else {
+      ASSERT_TRUE(red_black_tree_contains(tree, numbers->data[i]));
+    }
+  }
+
   red_black_tree_validate_expensive(tree);
 }
 
@@ -177,7 +206,7 @@ TEST(RedBlackTree, RecolorLeft) {
 
 TEST(RedBlackTree, Length1) { rb_tree_test_length(1); }
 TEST(RedBlackTree, Length2) { rb_tree_test_length(2); }
-TEST(RedBlackTree, StraightRotation) { rb_tree_test_length(3); }
+TEST(RedBlackTree, Length3) { rb_tree_test_length(3); }
 TEST(RedBlackTree, Length4) { rb_tree_test_length(4); }
 TEST(RedBlackTree, Length5) { rb_tree_test_length(5); }
 TEST(RedBlackTree, Length6) { rb_tree_test_length(6); }
@@ -186,5 +215,7 @@ TEST(RedBlackTree, Length16) { rb_tree_test_length(16); }
 TEST(RedBlackTree, Length128) { rb_tree_test_length(128); }
 TEST(RedBlackTree, Length500) { rb_tree_test_length(500); }
 TEST(RedBlackTree, Length1234) { rb_tree_test_length(1234); }
+TEST(RedBlackTree, LengthABC) { rb_tree_test_length(0xABC); }
 TEST(RedBlackTree, LengthBar) { rb_tree_test_length(0xBA5); }
+TEST(RedBlackTree, LengthCao) { rb_tree_test_length(0xCA0); }
 TEST(RedBlackTree, LengthFoo) { rb_tree_test_length(0xF00); }

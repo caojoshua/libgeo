@@ -1,5 +1,5 @@
 // Red black tree. A balanced binary search tree that supports search,
-// insertion, and deletion(TODO) in O(log(n)) time.
+// insertion, and deletion in O(log(n)) time.
 //
 // Each node is colored either red or black. For a red black tree, the following
 // properties must hold:
@@ -29,6 +29,21 @@
 // black and red nodes. Properties 3 and 4 bound this worst case. Despite this
 // difference, the worst case complexity of height is the same between red black
 // trees and AVL trees.
+//
+// This file contains many diagrams with the following labels
+// N - corresponds the the variable `n`
+// C - N's child
+// P - N's parent
+// S - N's sibling
+// SC - N's sibling's child
+// U - N's uncle
+// GP - N's grandparent
+// GPP - N's great-grandparent
+// [a-z] - miscellaneous nodes to show what rotations look like. can be NULL.
+//
+// Nodes end in `.b` if they are colored black, `.r` if they are
+// colored red, or `.db` if they are double black (see "resolve_double_black",
+// used for deletion).
 //
 #include "data_structure/red_black_tree.h"
 #include <assert.h>
@@ -92,6 +107,11 @@ Direction node_parent_direction(Node *n) {
   return RIGHT;
 }
 
+Node *node_child(Node *n, Direction d) {
+  assert(n);
+  return d == LEFT ? n->left : n->right;
+}
+
 Node *node_sibling(Node *n) {
   return node_parent_direction(n) == LEFT ? n->parent->right : n->parent->left;
 }
@@ -106,6 +126,23 @@ void node_adopt(Node *parent, Node *child, Direction direction) {
   if (child) {
     child->parent = parent;
   }
+}
+
+Node *node_leftmost(Node *n) {
+  assert(n);
+  while (n->left) {
+    n = n->left;
+  }
+  return n;
+}
+
+// Finds the right most node in the subtree rooted at n
+Node *node_rightmost(Node *n) {
+  assert(n);
+  while (n->right) {
+    n = n->right;
+  }
+  return n;
 }
 
 // Rotate about node `n`(N in the diagram). When rotating in n about a direction,
@@ -130,7 +167,8 @@ void node_adopt(Node *parent, Node *child, Direction direction) {
 //  / \
 // a   b
 //
-void node_rotate(Node *n, Direction d) {
+// TODO: node_rotate should take in the tree and set root if needed
+void node_rotate(RedBlackTree *tree, Node *n, Direction d) {
   assert(n);
   Node *parent = n->parent;
   Direction parent_direction;
@@ -155,6 +193,7 @@ void node_rotate(Node *n, Direction d) {
   if (parent) {
     node_adopt(parent, child, parent_direction);
   } else {
+    tree->root = child;
     child->parent = NULL;
   }
 }
@@ -162,21 +201,10 @@ void node_rotate(Node *n, Direction d) {
 // Node n might be violating red black tree properties. Fixup rotates and
 // re-colors the tree to restore correctness of the properties.
 //
-// This function contains diagrams with the following labels:
-// N - The node we are fixing up
-// P - N's parent
-// U - N's uncle
-// GP - N's grandparent
-// GPP - N's great-grandparent
-// [a-z] - miscellaneous nodes to show what rotations look like. can be NULL.
-//
-// Uppercase nodes end in `.b` if they are colored black, or `.r` if they are
-// colored red.
-//
 // After transformations, the labels do not change to demonstrate where nodes
 // end up. The colors may change to demonstrate recoloring.
 //
-Node *insert_fixup(Node *n) {
+void insert_fixup(RedBlackTree *tree, Node *n) {
   assert(n && "cannot fixup null node");
   assert(n->color == RED && "only fixup RED nodes");
 
@@ -184,13 +212,14 @@ Node *insert_fixup(Node *n) {
   if (!parent) {
     // if n is the root, color it black and return
     n->color = BLACK;
-    return n;
+    tree->root = n;
+    return;
   }
 
   Node *grandparent = parent->parent;
   if (!grandparent || parent->color == BLACK) {
     // If parent is the root or the parent is black, no fixups are needed
-    return NULL;
+    return;
   }
 
   // Recolor if uncle is red. No rotations are needed.
@@ -213,7 +242,8 @@ Node *insert_fixup(Node *n) {
     grandparent->color = RED;
     parent->color = BLACK;
     uncle->color = BLACK;
-    return insert_fixup(grandparent);
+    insert_fixup(tree, grandparent);
+    return;
   }
 
   // GP, P and N form a triangle. Transform it into a line. It then undergoes
@@ -238,7 +268,7 @@ Node *insert_fixup(Node *n) {
   Direction grandparent_direction = node_parent_direction(parent);
   if (parent_direction != grandparent_direction) {
     // If directions are opposite, then it is a triangle
-    node_rotate(parent, grandparent_direction);
+    node_rotate(tree, parent, grandparent_direction);
     // Swap n and parent in preparation for the straight line transformation
     Node *t = n;
     n = parent;
@@ -263,30 +293,28 @@ Node *insert_fixup(Node *n) {
   //   / \
   // U.b  a
   //
-  node_rotate(grandparent, opposite_direction(grandparent_direction));
+  node_rotate(tree, grandparent, opposite_direction(grandparent_direction));
 
   grandparent->color = RED;
   parent->color = BLACK;
   n->color = RED;
-
-  // Return parent if it is the new root node
-  return parent->parent ? NULL : parent;
 }
 
-Node *node_insert(Node *n, void *val, cmp_t cmp) {
+void node_insert(RedBlackTree *tree, Node *n, void *val) {
   assert(n && "RBTree: cannot insert to null node");
-  Direction direction = cmp(val, n->val) == LESS ? LEFT : RIGHT;
+  Direction direction = tree->cmp(val, n->val) == LESS ? LEFT : RIGHT;
   Node **child = direction == LEFT ? &n->left : &n->right;
 
   if (*child) {
     // Child node exists. Continue recursing into the child.
-    return node_insert(*child, val, cmp);
+    node_insert(tree, *child, val);
+    return;
   }
 
   // Child does not exist. Insert the node and fixup.
   *child = node_new(val, RED);
   node_adopt(n, *child, direction);
-  return insert_fixup(*child);
+  insert_fixup(tree, *child);
 }
 
 void red_black_tree_insert(RedBlackTree *tree, void *val) {
@@ -296,10 +324,7 @@ void red_black_tree_insert(RedBlackTree *tree, void *val) {
     tree->root = node_new(val, BLACK);
     return;
   }
-  Node *new_root = node_insert(tree->root, val, tree->cmp);
-  if (new_root) {
-    tree->root = new_root;
-  }
+  node_insert(tree, tree->root, val);
 }
 
 Node *node_search(Node *n, void *val, cmp_t cmp) {
@@ -313,26 +338,264 @@ Node *node_search(Node *n, void *val, cmp_t cmp) {
   return node_search(nextn, val, cmp);
 }
 
+// A double black is a node that counts for 2 black nodes in a path. We create a
+// double black node when we delete a black node. Deleting a black node can
+// violate the property that all paths have an equal number of black nodes.
+void resolve_double_black(RedBlackTree *tree, Node *n) {
+  assert(n);
+  assert(n->color == BLACK && "double black node must be colored black");
+
+  Node *parent = n->parent;
+  if (!parent) {
+    // If n is the root, we know the double black is resolved
+    tree->root = n;
+    return;
+  }
+
+  Direction parent_direction = node_parent_direction(n);
+  Direction opposite = opposite_direction(parent_direction);
+  Node *sibling = node_sibling(n);
+
+  // Case 1: sibling is red
+  //     P.b
+  //    /   \
+  //   S.r   N.db
+  //  /  \  /  \
+  // a   b  c   d
+  //
+  // right rotate about P, and recolor P and S:
+  //     S.b
+  //    /   \
+  //   a    P.r
+  //        /  \
+  //       b    N.db
+  //           /  \
+  //          c    d
+  //
+  // And repeat resolving double black for N. Note that `b` is guaranteed to be
+  // black since it was originally a child of a red node. Since `b` becomes the
+  // new sibling of `N`, we can resolve double black with one of case 2 or 3.
+  if (sibling->color == RED) {
+    node_rotate(tree, parent, parent_direction);
+    sibling->color = BLACK;
+    parent->color = RED;
+    sibling = node_sibling(n);
+    assert(sibling && sibling->color == BLACK);
+  }
+
+  // Case 2: sibling has a red child
+  Node *sibling_outer_child = node_child(sibling, opposite);
+  if (sibling_outer_child && sibling_outer_child->color == RED) {
+    // Case 2.a: The outer child is red
+    //     P.r
+    //    /   \
+    //   S.b   N.db
+    //  /   \
+    // SC.r  a
+    //
+    // After rotations/recoloring:
+    //     S.r
+    //    /   \
+    //   SC.b  P.b
+    //         / \
+    //        a   N.b
+    //
+    // In the before diagram, P can be red or black. S is assigned P's initial
+    // color.
+    node_rotate(tree, parent, parent_direction);
+    sibling->color = parent->color;
+    parent->color = BLACK;
+    sibling_outer_child->color = BLACK;
+    return;
+  }
+
+  Node *sibling_inner_child = node_child(sibling, parent_direction);
+  if (sibling_inner_child && sibling_inner_child->color == RED) {
+    // Case 2.b: The inner child is red, and the outer child is not red
+    //     P.b
+    //    /   \
+    //   S.b   N.db
+    //     \
+    //    SC.r
+    //
+    // After rotating about sibling, we can resolve double black for N with
+    // case 2.a
+    //     P.b
+    //    /   \
+    //  SC.b   N.db
+    //  /
+    // S.r
+    node_rotate(tree, sibling, opposite);
+    sibling->color = RED;
+    sibling_inner_child->color = BLACK;
+
+    // Recursive call always resolves to case 2.a
+    resolve_double_black(tree, n);
+    return;
+  }
+
+  // Case 3: sibling is black and sibling's children are both black
+  assert(sibling->color == BLACK &&
+         ((!sibling->left && !sibling->right) ||
+          (sibling->left->color == BLACK && sibling->right->color == BLACK)) &&
+         "sibling should be a black node with only black children");
+  sibling->color = RED;
+  if (parent->color == RED) {
+    // Case 3.a: parent is red.
+    //     P.r
+    //    /   \
+    //   S.b   N.db
+    //
+    // Recolors into
+    //     P.b
+    //    /   \
+    //   S.r   N.b
+    parent->color = BLACK;
+  } else {
+    // Case 3.b: parent is black.
+    //     P.b
+    //    /   \
+    //   S.b   N.db
+    //
+    // Recolors into
+    //     P.db
+    //    /   \
+    //   S.b   N.b
+    resolve_double_black(tree, parent);
+  }
+}
+
+void node_delete(RedBlackTree *tree, Node *n) {
+  assert(n);
+  // Case 1: n only has one child. Delete n and promote the child.
+  if (n->left && !n->right || !n->left && n->right) {
+    // Case 1.a: N is red and the child is black. Promote the child.
+    // N.r
+    //  \
+    //  C.b
+    //  / \
+    // a   b
+    //
+    // After promotion:
+    //   C.b
+    //  /   \
+    // a     b
+    //
+    Node *single_child = n->left ? n->left : n->right;
+    if (n->parent) {
+      node_adopt(n->parent, single_child, node_parent_direction(n));
+    } else {
+      // n is the root node. promote its child as the new root.
+      single_child->parent = NULL;
+      tree->root = single_child;
+    }
+
+    if (n->color == BLACK) {
+      if (single_child->color == RED) {
+        // Case 1.b: N is black and child is red. Promote the child and color it
+        // black.
+        // N.b
+        //  \
+        //  C.r
+        //  / \
+        // a   b
+        //
+        // After promotion:
+        //   C.b
+        //  /   \
+        // a     b
+        single_child->color = BLACK;
+      } else {
+        // Case 1.c: N is black and child is black. Promote the child. This
+        // invalidates the property that all paths should have the same number
+        // of black nodes. We treat C as a double black and resolve it.
+        // N.b
+        //  \
+        //  C.b
+        //  / \
+        // a   b
+        //
+        // After promotion:
+        //   C.db
+        //  /   \
+        // a     b
+        resolve_double_black(tree, single_child);
+      }
+    }
+    return;
+  }
+
+  // Case 2: n has no children. If n is red, we can delete it without violating
+  // properties. If n is black, we treat it as a double black, resolve it, and
+  // then delete the node.
+  if (!n->left && !n->right) {
+    if (n->color == BLACK) {
+      resolve_double_black(tree, n);
+    }
+    // After double black is resolved, we can safely delete the node without
+    // violating any properties.
+    if (n == tree->root) {
+      free(tree->root);
+      tree->root = NULL;
+    } else {
+      if (node_parent_direction(n) == LEFT) {
+        n->parent->left = NULL;
+      } else {
+        n->parent->right = NULL;
+      }
+    }
+    return;
+  }
+
+  // Case 3: n has two children
+  // n's predecessor is the rightmost node of n's left subtree
+  // First replace the entries of n and its inorder predecessor. By replacing
+  // only the entries, we maintain parent-child relationships and colors. Note
+  // that pred is not guaranteed to be a right child because it could be the
+  // left child of n.
+  //
+  // After swapping, we recursively delete n. Since n is swapped into a
+  // rightmost place, it cannot have any right children, so the recursive call
+  // will be handled with case 1 or 2.
+  //
+  //     N
+  //    /
+  //   a
+  //  / \
+  // b   c
+  //
+  // After swapping:
+  //     c
+  //    /
+  //   a
+  //  / \
+  // b   N
+  //
+  assert(n->left && n->right);
+  Node *pred = node_rightmost(n->left);
+  assert(pred->parent &&
+         "n's predecessor cannot be the root and must have a parent");
+
+  void *t = n->val;
+  n->val = pred->val;
+  pred->val = t;
+
+  node_delete(tree, pred);
+}
+
+void red_black_tree_delete(RedBlackTree *tree, void *val) {
+  red_black_tree_validate(tree);
+  Node *n = node_search(tree->root, val, tree->cmp);
+  if (!n) {
+    return;
+  }
+  tree->size -= 1;
+  node_delete(tree, n);
+}
+
 bool red_black_tree_contains(RedBlackTree *tree, void *val) {
   red_black_tree_validate(tree);
   return node_search(tree->root, val, tree->cmp);
-}
-
-Node *node_leftmost(Node *n) {
-  assert(n);
-  while (n->left) {
-    n = n->left;
-  }
-  return n;
-}
-
-// Finds the right most node in the subtree rooted at n
-Node *node_rightmost(Node *n) {
-  assert(n);
-  while (n->right) {
-    n = n->right;
-  }
-  return n;
 }
 
 Optional red_black_tree_min(RedBlackTree *tree) {
