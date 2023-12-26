@@ -145,9 +145,10 @@ Node *node_rightmost(Node *n) {
   return n;
 }
 
-// Rotate about node `n`(N in the diagram). When rotating in n about a direction,
-// the child in the opposite direction must not be null, and it will become the
-// new parent of `n`.
+// Rotate about node `n`(N in the diagram). When rotating in n about a
+// direction, the child in the opposite direction must not be null, and it will
+// become the new parent of `n`. Sets C and the root of the tree if P was
+// originally the root.
 //
 // Example left rotation about N
 // P
@@ -166,8 +167,6 @@ Node *node_rightmost(Node *n) {
 //   N   c
 //  / \
 // a   b
-//
-// TODO: node_rotate should take in the tree and set root if needed
 void node_rotate(RedBlackTree *tree, Node *n, Direction d) {
   assert(n);
   Node *parent = n->parent;
@@ -742,7 +741,7 @@ unsigned node_validate(Node *n, cmp_t cmp) {
     shorter_height = left_height;
     taller_height = right_height;
   }
-  assert(taller_height + 1 <= (shorter_height + 1) * 2 &&
+  assert(taller_height <= shorter_height * 2 + 1 &&
          "taller subtree's height should be bounded by twice the height of "
          "the shorter subtree's height");
 
