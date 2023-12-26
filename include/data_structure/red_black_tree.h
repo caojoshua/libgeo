@@ -17,6 +17,7 @@ RedBlackTree *red_black_tree_newc(cmp_t cmp);
 void red_black_tree_free(RedBlackTree *tree);
 bool red_black_tree_insert(RedBlackTree *tree, void *val);
 void *red_black_tree_delete(RedBlackTree *tree, void *val);
+void *red_black_tree_get(RedBlackTree *tree, void *val);
 bool red_black_tree_contains(RedBlackTree *tree, void *val);
 Optional red_black_tree_min(RedBlackTree *tree);
 Optional red_black_tree_max(RedBlackTree *tree);

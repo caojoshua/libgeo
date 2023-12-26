@@ -622,6 +622,12 @@ void *red_black_tree_delete(RedBlackTree *tree, void *val) {
   return deleted_val;
 }
 
+void *red_black_tree_get(RedBlackTree *tree, void *val) {
+  red_black_tree_validate(tree);
+  Node *n = node_search(tree->root, val, tree->cmp);
+  return n ? n->val : NULL;
+}
+
 bool red_black_tree_contains(RedBlackTree *tree, void *val) {
   red_black_tree_validate(tree);
   return node_search(tree->root, val, tree->cmp);

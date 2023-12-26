@@ -6,12 +6,23 @@ extern "C" {
 
 static const unsigned STRIDE = 5;
 
+static void test_get_true(RedBlackTree *tree, unsigned long i) {
+  ASSERT_TRUE(red_black_tree_contains(tree, (void *)i));
+  ASSERT_EQ(red_black_tree_get(tree, (void *)i), (void *)i);
+}
+
+static void test_get_false(RedBlackTree *tree, long i) {
+  ASSERT_FALSE(red_black_tree_contains(tree, (void *)i));
+  ASSERT_FALSE(red_black_tree_get(tree, (void *)i));
+  ASSERT_FALSE(red_black_tree_delete(tree, (void *)i));
+}
+
 void test_contains_range(RedBlackTree *tree, unsigned n) {
   ASSERT_GT(n, 0);
   EXPECT_EQ(tree->size, n);
   void **elements = red_black_tree_elements(tree);
   for (unsigned long i = 0; i < n; ++i) {
-    ASSERT_TRUE(red_black_tree_contains(tree, (void *)i));
+    test_get_true(tree, i);
     ASSERT_EQ((long)elements[i], i);
     if (i > 0) {
       Optional pred = red_black_tree_pred(tree, (void *)i);
@@ -26,8 +37,8 @@ void test_contains_range(RedBlackTree *tree, unsigned n) {
   }
   free(elements);
 
-  EXPECT_FALSE(red_black_tree_contains(tree, (void *)-1));
-  EXPECT_FALSE(red_black_tree_contains(tree, (void *)(long)(n)));
+  test_get_false(tree, -1);
+  test_get_false(tree, n);
 
   Optional min = red_black_tree_min(tree);
   EXPECT_TRUE(min.present);
@@ -47,13 +58,12 @@ void test_delete_range(RedBlackTree *tree, unsigned n) {
   for (unsigned long i = 0; i < n; i += STRIDE) {
     ASSERT_EQ(red_black_tree_delete(tree, (void *)i), (void *)i);
   }
-  ASSERT_EQ(red_black_tree_delete(tree, (void *)(long)n), (void *)0);
-  for (unsigned long i = 0; i < n; ++i) {
-    bool contains = red_black_tree_contains(tree, (void *)i);
+  test_get_false(tree, n);
+  for (unsigned i = 0; i < n; ++i) {
     if (i % STRIDE == 0) {
-      ASSERT_FALSE(contains);
+      test_get_false(tree, i);
     } else {
-      ASSERT_TRUE(contains);
+      test_get_true(tree, i);
     }
   }
 }
@@ -91,21 +101,21 @@ void test_contains_range_stride(RedBlackTree *tree, unsigned n) {
   unsigned max_val = remainder == 0 ? n - STRIDE : n - remainder;
 
   for (unsigned long i = STRIDE; i <= max_val; i += STRIDE) {
-    ASSERT_TRUE(red_black_tree_contains(tree, (void *)i));
-    for (unsigned j = i + 1; j <= i + STRIDE; ++j) {
-      Optional pred = red_black_tree_pred(tree, (void *)(long)j);
+    test_get_true(tree, i);
+    for (unsigned long j = i + 1; j <= i + STRIDE; ++j) {
+      Optional pred = red_black_tree_pred(tree, (void *)j);
       ASSERT_TRUE(pred.present);
       ASSERT_EQ((long)pred.val, i);
 
-      Optional succ = red_black_tree_succ(tree, (void *)(long)(j - STRIDE - 1));
+      Optional succ = red_black_tree_succ(tree, (void *)(j - STRIDE - 1));
       EXPECT_TRUE(succ.present);
       EXPECT_EQ((long)succ.val, i);
     }
   }
 
-  EXPECT_FALSE(red_black_tree_contains(tree, (void *)-1));
-  EXPECT_FALSE(red_black_tree_contains(tree, (void *)(long)(max_val + 1)));
-  EXPECT_FALSE(red_black_tree_contains(tree, (void *)(long)(n + STRIDE)));
+  test_get_false(tree, -1);
+  test_get_false(tree, max_val + 1);
+  test_get_false(tree, n + STRIDE);
 
   EXPECT_FALSE(red_black_tree_pred(tree, NULL).present);
   Optional pred = red_black_tree_pred(tree, (void *)(long)(n + STRIDE));
@@ -148,7 +158,7 @@ void rb_tree_test_random(unsigned n) {
     ASSERT_EQ(tree->size, i + 1);
   }
   for (unsigned i = 0; i < n; ++i) {
-    ASSERT_TRUE(red_black_tree_contains(tree, numbers->data[i]));
+    test_get_true(tree, (long)numbers->data[i]);
   }
 
   for (unsigned i = 0; i < n; i += STRIDE) {
@@ -157,9 +167,9 @@ void rb_tree_test_random(unsigned n) {
   }
   for (unsigned i = 0; i < n; ++i) {
     if (i % STRIDE == 0) {
-      ASSERT_FALSE(red_black_tree_contains(tree, numbers->data[i]));
+      test_get_false(tree, (long)numbers->data[i]);
     } else {
-      ASSERT_TRUE(red_black_tree_contains(tree, numbers->data[i]));
+      test_get_true(tree, (long)numbers->data[i]);
     }
   }
 
@@ -181,9 +191,9 @@ TEST(RedBlackTree, Empty) {
   EXPECT_EQ(tree->size, 0);
   EXPECT_FALSE(red_black_tree_min(tree).present);
   EXPECT_FALSE(red_black_tree_max(tree).present);
-  EXPECT_FALSE(red_black_tree_contains(tree, NULL));
-  EXPECT_FALSE(red_black_tree_contains(tree, (void *)0xBA5));
-  EXPECT_FALSE(red_black_tree_contains(tree, (void *)0xF00));
+  test_get_false(tree, 0);
+  test_get_false(tree, 0xBA5);
+  test_get_false(tree, 0xF00);
   red_black_tree_validate_expensive(tree);
   red_black_tree_free(tree);
 }

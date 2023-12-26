@@ -28,6 +28,7 @@ void hash_free(Hash *hash);
 bool hash_insert(Hash *hash, void *key);
 bool hash_insert_pair(Hash *hash, void *key, void *val);
 void *hash_delete(Hash *hash, void *key);
+void *hash_get(Hash *hash, void *key);
 bool hash_contains(Hash *hash, void *key);
 
 #endif

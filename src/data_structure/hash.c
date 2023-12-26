@@ -161,6 +161,17 @@ void *hash_delete(Hash *hash, void *key) {
   return NULL;
 }
 
+void *hash_get(Hash *hash, void *key) {
+  validate(hash);
+  RedBlackTree *tree = tree_at(hash, key);
+  if (!tree) {
+    return NULL;
+  }
+  Node key_node = key_node_new(key);
+  Node *n = red_black_tree_get(tree, &key_node);
+  return n ? n->val : NULL;
+}
+
 bool hash_contains(Hash *hash, void *key) {
   validate(hash);
   RedBlackTree *tree = tree_at(hash, key);

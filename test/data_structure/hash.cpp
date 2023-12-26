@@ -5,6 +5,17 @@ extern "C" {
 
 static const unsigned STRIDE = 5;
 
+static void test_get_true(Hash *hash, unsigned long i) {
+  ASSERT_TRUE(hash_contains(hash, (void *)(long)i));
+  ASSERT_EQ(hash_get(hash, (void *)i), (void *)i);
+}
+
+static void test_get_false(Hash *hash, unsigned long i) {
+  ASSERT_FALSE(hash_contains(hash, (void *)(long)i));
+  ASSERT_FALSE(hash_get(hash, (void *)i));
+  ASSERT_FALSE(hash_delete(hash, (void *)(long)i));
+}
+
 void hash_test_length_increment(unsigned n) {
   Hash *hash = hash_new();
   for (unsigned long i = 0; i < n; ++i) {
@@ -12,21 +23,20 @@ void hash_test_length_increment(unsigned n) {
     ASSERT_FALSE(hash_insert_pair(hash, (void *)i, (void *)i));
   }
   for (unsigned i = 0; i < n; ++i) {
-    ASSERT_TRUE(hash_contains(hash, (void *)(long)i));
+    test_get_true(hash, i);
   }
-  ASSERT_FALSE(hash_contains(hash, (void *)(long)n));
-  ASSERT_FALSE(hash_delete(hash, (void *)(long)n));
+  test_get_false(hash, n);
 
   for (unsigned long i = 0; i < n; i += STRIDE) {
     ASSERT_EQ(hash_delete(hash, (void *)i), (void *)i);
-    ASSERT_FALSE(hash_delete(hash, (void *)i));
+    test_get_false(hash, i);
   }
 
   for (unsigned i = 0; i < n; ++i) {
     if (i % STRIDE == 0) {
-      ASSERT_FALSE(hash_contains(hash, (void *)(long)i));
+      test_get_false(hash, i);
     } else {
-      ASSERT_TRUE(hash_contains(hash, (void *)(long)i));
+      test_get_true(hash, i);
     }
   }
   hash_free(hash);
@@ -38,14 +48,13 @@ void hash_test_length_strided(unsigned n) {
     ASSERT_TRUE(hash_insert_pair(hash, (void *)i, (void *)i));
     ASSERT_FALSE(hash_insert_pair(hash, (void *)i, (void *)i));
   }
-  ASSERT_FALSE(hash_contains(hash, (void *)(long)n));
-  ASSERT_FALSE(hash_delete(hash, (void *)(long)n));
+  test_get_false(hash, n);
 
   for (unsigned i = 0; i < n; ++i) {
     if (i % STRIDE == 0) {
-      ASSERT_TRUE(hash_contains(hash, (void *)(long)i));
+      test_get_true(hash, i);
     } else {
-      ASSERT_FALSE(hash_contains(hash, (void *)(long)i));
+      test_get_false(hash, i);
     }
   }
   hash_free(hash);
