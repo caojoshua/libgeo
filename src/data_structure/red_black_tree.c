@@ -301,7 +301,14 @@ void insert_fixup(RedBlackTree *tree, Node *n) {
 
 void node_insert(RedBlackTree *tree, Node *n, void *val) {
   assert(n && "RBTree: cannot insert to null node");
-  Direction direction = tree->cmp(val, n->val) == LESS ? LEFT : RIGHT;
+
+  Ordering comparison = tree->cmp(val, n->val);
+  if (comparison == EQUALS) {
+    // Element already exists. Nothing to insert.
+    return;
+  }
+
+  Direction direction = comparison == LESS ? LEFT : RIGHT;
   Node **child = direction == LEFT ? &n->left : &n->right;
 
   if (*child) {
@@ -313,14 +320,15 @@ void node_insert(RedBlackTree *tree, Node *n, void *val) {
   // Child does not exist. Insert the node and fixup.
   *child = node_new(val, RED);
   node_adopt(n, *child, direction);
+  tree->size += 1;
   insert_fixup(tree, *child);
 }
 
 void red_black_tree_insert(RedBlackTree *tree, void *val) {
   red_black_tree_validate(tree);
-  tree->size += 1;
   if (!tree->root) {
     tree->root = node_new(val, BLACK);
+    tree->size = 1;
     return;
   }
   node_insert(tree, tree->root, val);
@@ -614,7 +622,6 @@ Optional red_black_tree_max(RedBlackTree *tree) {
 }
 
 // Find the nearest parent of n that is a predecessor/successor of val.
-// TODO: this is weird with duplicates values. should just not support it.
 Optional node_parent_predsucc(Node *n, void *val, cmp_t cmp, Ordering ord) {
   n = n->parent;
   while (n) {
@@ -706,8 +713,6 @@ Optional red_black_tree_succ(RedBlackTree *tree, void *val) {
 
 // Validates property 3 as listed at the top of the file, binary tree
 // ordering properties, and that the tree is balanced.
-// TODO: We allow equivalent nodes. C++'s sets are just RBTrees that do not
-// allow equivalent elements. Need to think about our use cases.
 unsigned node_validate(Node *n, cmp_t cmp) {
   assert(n && "cannot validate null node");
   if (n->color == RED) {
@@ -721,14 +726,12 @@ unsigned node_validate(Node *n, cmp_t cmp) {
   unsigned right_height = 0;
   if (n->left) {
     Ordering order = cmp(n->val, n->left->val);
-    assert((order == GREATER || order == EQUALS) &&
-           "parent node must be >= left child node");
+    assert(order == GREATER && "parent node must be >= left child node");
     left_height = 1 + node_validate(n->left, cmp);
   }
   if (n->right) {
     Ordering order = cmp(n->val, n->right->val);
-    assert(order == LESS ||
-           order == EQUALS && "parent node must be <= right child node");
+    assert(order == LESS && "parent node must be <= right child node");
     right_height = 1 + node_validate(n->right, cmp);
   }
 

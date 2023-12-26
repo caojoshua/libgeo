@@ -8,6 +8,7 @@ static const unsigned STRIDE = 5;
 
 void test_contains_range(RedBlackTree *tree, unsigned n) {
   ASSERT_GT(n, 0);
+  EXPECT_EQ(tree->size, n);
   for (unsigned long i = 0; i < n; ++i) {
     ASSERT_TRUE(red_black_tree_contains(tree, (void *)i));
     if (i > 0) {
@@ -127,6 +128,13 @@ void rb_tree_test_random(unsigned n) {
   Vector *numbers = vector_newn(n);
   for (unsigned i = 0; i < n; ++i) {
     void *r = (void *)(long)rand();
+    // TODO: Make sure we have unique numbers by checking if the number exists
+    // in a hash structure. We get lucky with our seed that we do not have any
+    // random numbers right now with 2^32 possible numbers.
+    /* void *r; */
+    /* do { */
+    /*   r = (void *)(long)rand(); */
+    /* } while (vector_contains(numbers, r)); */
     red_black_tree_insert(tree, (void *)(long)r);
     vector_push(numbers, r);
     red_black_tree_validate_expensive(tree);
@@ -202,6 +210,14 @@ TEST(RedBlackTree, RecolorLeft) {
   red_black_tree_insert(tree, NULL);
   red_black_tree_insert(tree, (void *)1);
   test_contains_range(tree, 4);
+}
+
+TEST(RedBlackTree, Repeat) {
+  RedBlackTree *tree = red_black_tree_new();
+  red_black_tree_insert(tree, NULL);
+  red_black_tree_insert(tree, NULL);
+  red_black_tree_insert(tree, NULL);
+  test_contains_range(tree, 1);
 }
 
 TEST(RedBlackTree, Length1) { rb_tree_test_length(1); }
