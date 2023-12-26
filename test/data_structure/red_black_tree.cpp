@@ -63,6 +63,7 @@ void rb_tree_test_increasing(unsigned n) {
   test_contains_range(tree, n);
   test_delete_range(tree, n);
   red_black_tree_validate_expensive(tree);
+  red_black_tree_free(tree);
 }
 
 void rb_tree_test_decreasing(unsigned n) {
@@ -74,6 +75,7 @@ void rb_tree_test_decreasing(unsigned n) {
   test_contains_range(tree, n);
   test_delete_range(tree, n);
   red_black_tree_validate_expensive(tree);
+  red_black_tree_free(tree);
 }
 
 void test_contains_range_stride(RedBlackTree *tree, unsigned n) {
@@ -120,6 +122,7 @@ void rb_tree_test_increasing_stride(unsigned n) {
   }
   test_contains_range_stride(tree, n);
   red_black_tree_validate_expensive(tree);
+  red_black_tree_free(tree);
 }
 
 void rb_tree_test_random(unsigned n) {
@@ -155,7 +158,9 @@ void rb_tree_test_random(unsigned n) {
     }
   }
 
+  vector_free(numbers);
   red_black_tree_validate_expensive(tree);
+  red_black_tree_free(tree);
 }
 
 void rb_tree_test_length(unsigned n) {
@@ -175,6 +180,7 @@ TEST(RedBlackTree, Empty) {
   EXPECT_FALSE(red_black_tree_contains(tree, (void *)0xBA5));
   EXPECT_FALSE(red_black_tree_contains(tree, (void *)0xF00));
   red_black_tree_validate_expensive(tree);
+  red_black_tree_free(tree);
 }
 
 
@@ -184,6 +190,7 @@ TEST(RedBlackTree, TriangleRotationRight) {
   red_black_tree_insert(tree, (void *)2);
   red_black_tree_insert(tree, (void *)1);
   test_contains_range(tree, 3);
+  red_black_tree_free(tree);
 }
 
 TEST(RedBlackTree, TriangleRotationLeft) {
@@ -192,6 +199,7 @@ TEST(RedBlackTree, TriangleRotationLeft) {
   red_black_tree_insert(tree, NULL);
   red_black_tree_insert(tree, (void *)1);
   test_contains_range(tree, 3);
+  red_black_tree_free(tree);
 }
 
 TEST(RedBlackTree, RecolorRight) {
@@ -201,6 +209,7 @@ TEST(RedBlackTree, RecolorRight) {
   red_black_tree_insert(tree, (void *)2);
   red_black_tree_insert(tree, (void *)3);
   test_contains_range(tree, 4);
+  red_black_tree_free(tree);
 }
 
 TEST(RedBlackTree, RecolorLeft) {
@@ -210,6 +219,7 @@ TEST(RedBlackTree, RecolorLeft) {
   red_black_tree_insert(tree, NULL);
   red_black_tree_insert(tree, (void *)1);
   test_contains_range(tree, 4);
+  red_black_tree_free(tree);
 }
 
 TEST(RedBlackTree, Repeat) {
@@ -218,6 +228,7 @@ TEST(RedBlackTree, Repeat) {
   red_black_tree_insert(tree, NULL);
   red_black_tree_insert(tree, NULL);
   test_contains_range(tree, 1);
+  red_black_tree_free(tree);
 }
 
 TEST(RedBlackTree, Length1) { rb_tree_test_length(1); }

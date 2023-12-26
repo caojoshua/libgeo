@@ -1,6 +1,5 @@
 #include "data_structure/vector.h"
 #include "assert.h"
-#include "stdio.h"
 #include "stdlib.h"
 #include <string.h>
 
@@ -39,10 +38,8 @@ void *vector_pop_back(Vector *vec) {
 }
 
 bool vector_contains(Vector *vec, void *val) {
-  printf("vec contains: %p\n", val);
   vector_validate(vec);
   for (int i = 0; i < vec->size; ++i) {
-    printf("%i: %p\n", i, vec->data[i]);
     if (vec->data[i] == val) {
       return true;
     }

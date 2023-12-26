@@ -13,6 +13,7 @@ typedef struct {
 } RedBlackTree;
 
 RedBlackTree *red_black_tree_new();
+void red_black_tree_free(RedBlackTree *tree);
 void red_black_tree_insert(RedBlackTree *tree, void *val);
 void red_black_tree_delete(RedBlackTree *tree, void *val);
 bool red_black_tree_contains(RedBlackTree *tree, void *val);

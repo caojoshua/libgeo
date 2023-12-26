@@ -98,6 +98,21 @@ RedBlackTree *red_black_tree_new() {
   return tree;
 }
 
+void node_free(Node *n) {
+  if (!n) {
+    return;
+  }
+  node_free(n->left);
+  node_free(n->right);
+  free(n);
+}
+
+void red_black_tree_free(RedBlackTree *tree) {
+  red_black_tree_validate(tree);
+  node_free(tree->root);
+  free(tree);
+}
+
 Direction node_parent_direction(Node *n) {
   assert(n && n->parent);
   if (n->parent->left == n) {
@@ -529,6 +544,7 @@ void node_delete(RedBlackTree *tree, Node *n) {
         resolve_double_black(tree, single_child);
       }
     }
+    free(n);
     return;
   }
 
@@ -542,7 +558,6 @@ void node_delete(RedBlackTree *tree, Node *n) {
     // After double black is resolved, we can safely delete the node without
     // violating any properties.
     if (n == tree->root) {
-      free(tree->root);
       tree->root = NULL;
     } else {
       if (node_parent_direction(n) == LEFT) {
@@ -551,6 +566,7 @@ void node_delete(RedBlackTree *tree, Node *n) {
         n->parent->right = NULL;
       }
     }
+    free(n);
     return;
   }
 
