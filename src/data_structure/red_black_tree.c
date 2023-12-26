@@ -318,13 +318,13 @@ void insert_fixup(RedBlackTree *tree, Node *n) {
   n->color = RED;
 }
 
-void node_insert(RedBlackTree *tree, Node *n, void *val) {
+bool node_insert(RedBlackTree *tree, Node *n, void *val) {
   assert(n && "RBTree: cannot insert to null node");
 
   Ordering comparison = tree->cmp(val, n->val);
   if (comparison == EQUALS) {
     // Element already exists. Nothing to insert.
-    return;
+    return false;
   }
 
   Direction direction = comparison == LESS ? LEFT : RIGHT;
@@ -332,8 +332,7 @@ void node_insert(RedBlackTree *tree, Node *n, void *val) {
 
   if (*child) {
     // Child node exists. Continue recursing into the child.
-    node_insert(tree, *child, val);
-    return;
+    return node_insert(tree, *child, val);
   }
 
   // Child does not exist. Insert the node and fixup.
@@ -341,16 +340,17 @@ void node_insert(RedBlackTree *tree, Node *n, void *val) {
   node_adopt(n, *child, direction);
   tree->size += 1;
   insert_fixup(tree, *child);
+  return true;
 }
 
-void red_black_tree_insert(RedBlackTree *tree, void *val) {
+bool red_black_tree_insert(RedBlackTree *tree, void *val) {
   red_black_tree_validate(tree);
   if (!tree->root) {
     tree->root = node_new(val, BLACK);
     tree->size = 1;
-    return;
+    return true;
   }
-  node_insert(tree, tree->root, val);
+  return node_insert(tree, tree->root, val);
 }
 
 Node *node_search(Node *n, void *val, cmp_t cmp) {
@@ -610,14 +610,16 @@ void node_delete(RedBlackTree *tree, Node *n) {
   node_delete(tree, pred);
 }
 
-void red_black_tree_delete(RedBlackTree *tree, void *val) {
+void *red_black_tree_delete(RedBlackTree *tree, void *val) {
   red_black_tree_validate(tree);
   Node *n = node_search(tree->root, val, tree->cmp);
   if (!n) {
-    return;
+    return NULL;
   }
   tree->size -= 1;
+  void *deleted_val = n->val;
   node_delete(tree, n);
+  return deleted_val;
 }
 
 bool red_black_tree_contains(RedBlackTree *tree, void *val) {
@@ -729,6 +731,23 @@ Optional red_black_tree_succ(RedBlackTree *tree, void *val) {
     return optional_null();
   }
   return node_succ(tree->root, val, tree->cmp);
+}
+
+void **red_black_tree_elements(RedBlackTree *tree) {
+  red_black_tree_validate(tree);
+  if (tree->size == 0) {
+    return NULL;
+  }
+  void **elements = malloc(tree->size * sizeof(void *));
+  void **elements_iter = elements;
+  Optional iter = red_black_tree_min(tree);
+  assert(iter.present && "tree with size zero should have a minimum");
+  do {
+    *elements_iter = iter.val;
+    ++elements_iter;
+    iter = red_black_tree_succ(tree, iter.val);
+  } while (iter.present);
+  return elements;
 }
 
 // Validates property 3 as listed at the top of the file, binary tree

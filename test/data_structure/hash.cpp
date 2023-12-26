@@ -7,16 +7,21 @@ static const unsigned STRIDE = 5;
 
 void hash_test_length_increment(unsigned n) {
   Hash *hash = hash_new();
-  for (unsigned i = 0; i < n; ++i) {
-    hash_insert(hash, (void *)(long)i);
+  for (unsigned long i = 0; i < n; ++i) {
+    ASSERT_TRUE(hash_insert_pair(hash, (void *)i, (void *)i));
+    ASSERT_FALSE(hash_insert_pair(hash, (void *)i, (void *)i));
   }
   for (unsigned i = 0; i < n; ++i) {
     ASSERT_TRUE(hash_contains(hash, (void *)(long)i));
   }
+  ASSERT_FALSE(hash_contains(hash, (void *)(long)n));
+  ASSERT_FALSE(hash_delete(hash, (void *)(long)n));
 
-  for (unsigned i = 0; i < n; i += STRIDE) {
-    hash_delete(hash, (void *)(long)i);
+  for (unsigned long i = 0; i < n; i += STRIDE) {
+    ASSERT_EQ(hash_delete(hash, (void *)i), (void *)i);
+    ASSERT_FALSE(hash_delete(hash, (void *)i));
   }
+
   for (unsigned i = 0; i < n; ++i) {
     if (i % STRIDE == 0) {
       ASSERT_FALSE(hash_contains(hash, (void *)(long)i));
@@ -29,9 +34,13 @@ void hash_test_length_increment(unsigned n) {
 
 void hash_test_length_strided(unsigned n) {
   Hash *hash = hash_new();
-  for (unsigned i = 0; i < n; i += STRIDE) {
-    hash_insert(hash, (void *)(long)i);
+  for (unsigned long i = 0; i < n; i += STRIDE) {
+    ASSERT_TRUE(hash_insert_pair(hash, (void *)i, (void *)i));
+    ASSERT_FALSE(hash_insert_pair(hash, (void *)i, (void *)i));
   }
+  ASSERT_FALSE(hash_contains(hash, (void *)(long)n));
+  ASSERT_FALSE(hash_delete(hash, (void *)(long)n));
+
   for (unsigned i = 0; i < n; ++i) {
     if (i % STRIDE == 0) {
       ASSERT_TRUE(hash_contains(hash, (void *)(long)i));
@@ -44,7 +53,7 @@ void hash_test_length_strided(unsigned n) {
 
 void hash_test_length(unsigned n) {
   hash_test_length_increment(n);
-  /* hash_test_length_strided(n); */
+  hash_test_length_strided(n);
 }
 
 TEST(Hash, Length1) { hash_test_length(1); }

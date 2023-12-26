@@ -9,8 +9,10 @@ static const unsigned STRIDE = 5;
 void test_contains_range(RedBlackTree *tree, unsigned n) {
   ASSERT_GT(n, 0);
   EXPECT_EQ(tree->size, n);
+  void **elements = red_black_tree_elements(tree);
   for (unsigned long i = 0; i < n; ++i) {
     ASSERT_TRUE(red_black_tree_contains(tree, (void *)i));
+    ASSERT_EQ((long)elements[i], i);
     if (i > 0) {
       Optional pred = red_black_tree_pred(tree, (void *)i);
       ASSERT_TRUE(pred.present);
@@ -22,6 +24,7 @@ void test_contains_range(RedBlackTree *tree, unsigned n) {
       ASSERT_EQ((long)succ.val, (i + 1));
     }
   }
+  free(elements);
 
   EXPECT_FALSE(red_black_tree_contains(tree, (void *)-1));
   EXPECT_FALSE(red_black_tree_contains(tree, (void *)(long)(n)));
@@ -42,8 +45,9 @@ void test_contains_range(RedBlackTree *tree, unsigned n) {
 void test_delete_range(RedBlackTree *tree, unsigned n) {
   ASSERT_GT(n, 0);
   for (unsigned long i = 0; i < n; i += STRIDE) {
-    red_black_tree_delete(tree, (void *)i);
+    ASSERT_EQ(red_black_tree_delete(tree, (void *)i), (void *)i);
   }
+  ASSERT_EQ(red_black_tree_delete(tree, (void *)(long)n), (void *)0);
   for (unsigned long i = 0; i < n; ++i) {
     bool contains = red_black_tree_contains(tree, (void *)i);
     if (i % STRIDE == 0) {
@@ -57,7 +61,7 @@ void test_delete_range(RedBlackTree *tree, unsigned n) {
 void rb_tree_test_increasing(unsigned n) {
   RedBlackTree *tree = red_black_tree_new();
   for (unsigned long i = 0; i < n; ++i) {
-    red_black_tree_insert(tree, (void *)i);
+    ASSERT_TRUE(red_black_tree_insert(tree, (void *)i));
     ASSERT_EQ(tree->size, i + 1);
   }
   test_contains_range(tree, n);
@@ -69,7 +73,7 @@ void rb_tree_test_increasing(unsigned n) {
 void rb_tree_test_decreasing(unsigned n) {
   RedBlackTree *tree = red_black_tree_new();
   for (unsigned long i = n; i > 0; --i) {
-    red_black_tree_insert(tree, (void *)(i - 1));
+    ASSERT_TRUE(red_black_tree_insert(tree, (void *)(i - 1)));
     ASSERT_EQ(tree->size, n - i + 1);
   }
   test_contains_range(tree, n);
@@ -118,7 +122,7 @@ void test_contains_range_stride(RedBlackTree *tree, unsigned n) {
 void rb_tree_test_increasing_stride(unsigned n) {
   RedBlackTree *tree = red_black_tree_new();
   for (unsigned long i = STRIDE; i < n; i += STRIDE) {
-    red_black_tree_insert(tree, (void *)i);
+    ASSERT_TRUE(red_black_tree_insert(tree, (void *)i));
   }
   test_contains_range_stride(tree, n);
   red_black_tree_validate_expensive(tree);
@@ -148,7 +152,8 @@ void rb_tree_test_random(unsigned n) {
   }
 
   for (unsigned i = 0; i < n; i += STRIDE) {
-    red_black_tree_delete(tree, (void *)(long)numbers->data[i]);
+    void *element = (void *)(long)numbers->data[i];
+    ASSERT_EQ(red_black_tree_delete(tree, element), element);
   }
   for (unsigned i = 0; i < n; ++i) {
     if (i % STRIDE == 0) {
@@ -224,9 +229,9 @@ TEST(RedBlackTree, RecolorLeft) {
 
 TEST(RedBlackTree, Repeat) {
   RedBlackTree *tree = red_black_tree_new();
-  red_black_tree_insert(tree, NULL);
-  red_black_tree_insert(tree, NULL);
-  red_black_tree_insert(tree, NULL);
+  ASSERT_TRUE(red_black_tree_insert(tree, NULL));
+  ASSERT_FALSE(red_black_tree_insert(tree, NULL));
+  ASSERT_FALSE(red_black_tree_insert(tree, NULL));
   test_contains_range(tree, 1);
   red_black_tree_free(tree);
 }

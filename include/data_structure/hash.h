@@ -25,9 +25,9 @@ Hash *hash_new();
 Hash *hash_newf(hashfunc_t f);
 void hash_free(Hash *hash);
 
-void hash_insert(Hash *hash, void *key);
-void hash_insert_pair(Hash *hash, void *key, void *val);
-void hash_delete(Hash *hash, void *key);
+bool hash_insert(Hash *hash, void *key);
+bool hash_insert_pair(Hash *hash, void *key, void *val);
+void *hash_delete(Hash *hash, void *key);
 bool hash_contains(Hash *hash, void *key);
 
 #endif

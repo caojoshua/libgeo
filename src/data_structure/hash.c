@@ -18,7 +18,6 @@
 #include <assert.h>
 #include <stdlib.h>
 
-// Must be a power of 2.
 const static unsigned DEFAULT_INITIAL_CAPACITY = 1 << 4;
 const static float DEFAULT_LOAD_FACTOR = 0.75;
 
@@ -70,11 +69,11 @@ void hash_free(Hash *hash) {
   for (unsigned i = 0; i < hash->capacity; ++i) {
     RedBlackTree *tree = hash->data[i];
     if (tree) {
-      Optional optional = red_black_tree_min(tree);
-      while(optional.present) {
-        free(optional.val);
-        optional = red_black_tree_succ(tree, optional.val);
+      Node **elements = (Node **)red_black_tree_elements(tree);
+      for (unsigned i = 0; i < tree->size; ++i) {
+        free(elements[i]);
       }
+      free(elements);
       red_black_tree_free(tree);
     }
   }
@@ -109,12 +108,13 @@ static void hash_resize(Hash *hash) {
     if (!tree) {
       continue;
     }
-    Optional optional = red_black_tree_min(tree);
-    while (optional.present) {
-      Node *n = optional.val;
+    Node **elements = (Node **)red_black_tree_elements(tree);
+    for (unsigned i = 0; i < tree->size; ++i) {
+      Node *n = elements[i];
       hash_insert_pair(hash, n->key, n->val);
-      optional = red_black_tree_succ(tree, n);
+      free(n);
     }
+    free(elements);
     red_black_tree_free(tree);
   }
 
@@ -122,9 +122,11 @@ static void hash_resize(Hash *hash) {
   free(old_data);
 }
 
-void hash_insert(Hash *hash, void *key) { hash_insert_pair(hash, key, NULL); }
+bool hash_insert(Hash *hash, void *key) {
+  return hash_insert_pair(hash, key, NULL);
+}
 
-void hash_insert_pair(Hash *hash, void *key, void *val) {
+bool hash_insert_pair(Hash *hash, void *key, void *val) {
   validate(hash);
   unsigned bucket = bucket_at(hash, key);
   RedBlackTree *tree = hash->data[bucket];
@@ -132,24 +134,31 @@ void hash_insert_pair(Hash *hash, void *key, void *val) {
     tree = red_black_tree_newc(node_cmp);
     hash->data[bucket] = tree;
   }
-  // TODO: need RBTree to tell us whether there was a new insertion
-  red_black_tree_insert(tree, node_new(key, val));
-  hash->size += 1;
-  if (hash->size >= hash->capacity * hash->load_factor) {
-    hash_resize(hash);
+  if (red_black_tree_insert(tree, node_new(key, val))) {
+    hash->size += 1;
+    if (hash->size >= hash->capacity * hash->load_factor) {
+      hash_resize(hash);
+    }
+    return true;
   }
+  return false;
 }
 
-void hash_delete(Hash *hash, void *key) {
+void *hash_delete(Hash *hash, void *key) {
   validate(hash);
   RedBlackTree *tree = tree_at(hash, key);
   if (!tree) {
-    return;
+    return NULL;
   }
-  // TODO: need RBTree to return the val
   Node key_node = key_node_new(key);
-  red_black_tree_delete(tree, &key_node);
-  hash->size -= 1;
+  Node *deleted_node = red_black_tree_delete(tree, &key_node);
+  if (deleted_node) {
+    void *val = deleted_node->val;
+    free(deleted_node);
+    hash->size -= 1;
+    return val;
+  }
+  return NULL;
 }
 
 bool hash_contains(Hash *hash, void *key) {
