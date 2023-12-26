@@ -89,11 +89,15 @@ Node *node_new(void *val, Color color) {
 }
 
 RedBlackTree *red_black_tree_new() {
+  return red_black_tree_newc(less_than_cmp);
+}
+
+RedBlackTree *red_black_tree_newc(cmp_t cmp) {
   RedBlackTree *tree = malloc(sizeof(RedBlackTree));
   *tree = (RedBlackTree){
       .root = nullptr,
       .size = 0,
-      .cmp = less_than_cmp,
+      .cmp = cmp,
   };
   return tree;
 }

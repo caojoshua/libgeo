@@ -1,5 +1,6 @@
 add_executable(
   datastruct_test
+  hash.cpp
   priority_queue.cpp
   red_black_tree.cpp
   vector.cpp
