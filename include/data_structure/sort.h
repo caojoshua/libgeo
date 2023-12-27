@@ -1,6 +1,9 @@
 #ifndef HASH_H
 #define HASH_H
 
-void quick_sort(void **data, unsigned n);
+typedef void **(*sort_t)(void **, unsigned);
+
+void **merge_sort(void **data, unsigned n);
+void **quick_sort(void **data, unsigned n);
 
 #endif

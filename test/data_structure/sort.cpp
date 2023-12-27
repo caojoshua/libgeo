@@ -3,24 +3,49 @@ extern "C" {
 }
 #include <gtest/gtest.h>
 
-static void test_sorted(void **data, unsigned n) {
+static void test_sorted(void **data, sort_t sort, unsigned n) {
+  data = sort(data, n);
   for (unsigned i = 0; i < n - 1; ++i) {
     ASSERT_LT(data[i], data[i + 1]);
   }
   free(data);
 }
 
-static void test_random(unsigned n) {
+void test_already_sorted(sort_t sort, unsigned n) {
+  void **data = (void **)malloc(sizeof(void *) * n);
+  for (long i = 0; i < n; ++i) {
+    data[i] = (void *)i;
+  }
+  test_sorted(data, sort, n);
+}
+
+void test_already_reverse_sorted(sort_t sort, unsigned n) {
+  void **data = (void **)malloc(sizeof(void *) * n);
+  for (long i = 0; i < n; ++i) {
+    data[i] = (void *)(n - i);
+  }
+  test_sorted(data, sort, n);
+}
+
+static void test_random(sort_t sort, unsigned n) {
   srand(0);
   void **data = (void **)malloc(sizeof(void *) * n);
   for (unsigned i = 0; i < n; ++i) {
     data[i] = (void *)(long)rand();
   }
-  quick_sort(data, n);
-  test_sorted(data, n);
+  test_sorted(data, sort, n);
 }
 
-static void test_length(unsigned n) { test_random(n); }
+static void test_sort(sort_t sort, unsigned n) {
+  test_already_sorted(sort, n);
+  test_already_reverse_sorted(sort, n);
+  test_random(sort, n);
+}
+
+static void test_length(unsigned n) {
+  test_sort(merge_sort, n);
+  test_sort(quick_sort, n);
+}
 
 TEST(Sort, Length1) { test_length(1); }
 TEST(Sort, Length2) { test_length(2); }

@@ -1,8 +1,59 @@
 #include "data_structure/sort.h"
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 
-void quick_sort(void **data, unsigned n) {
+void merge_sortr(void **data, void **data_copy, unsigned n) {
   if (n <= 1) {
     return;
+  }
+
+  unsigned mid_index = n / 2;
+  merge_sortr(data, data_copy, mid_index);
+  merge_sortr(data + mid_index, data_copy, n - mid_index);
+
+  unsigned i = 0;
+  unsigned j = mid_index;
+  unsigned k = 0;
+  while (i < mid_index && j < n) {
+    if (data[i] < data[j]) {
+      data_copy[k] = data[i];
+      ++i;
+    } else {
+      data_copy[k] = data[j];
+      ++j;
+    }
+    ++k;
+  }
+
+  while (i < mid_index) {
+    data_copy[k] = data[i];
+    ++k;
+    ++i;
+  }
+
+  while (j < n) {
+    data_copy[k] = data[j];
+    ++k;
+    ++j;
+  }
+
+  memcpy(data, data_copy, sizeof(void *) * n);
+  assert(k == n && "should have copied n elements into the data_copy");
+}
+
+void **merge_sort(void **data, unsigned n) {
+  assert(data && "cannot sort NULL data");
+  void **data_copy = malloc(sizeof(void *) * n);
+  merge_sortr(data, data_copy, n);
+  free(data_copy);
+  return data;
+}
+
+void **quick_sort(void **data, unsigned n) {
+  assert(data && "cannot sort NULL data");
+  if (n <= 1) {
+    return data;
   }
 
   void *pivot = data[0];
@@ -21,5 +72,6 @@ void quick_sort(void **data, unsigned n) {
   data[num_left] = pivot;
   quick_sort(data, num_left);
   quick_sort(data + num_left + 1, n - num_left - 1);
+  return data;
 }
 
