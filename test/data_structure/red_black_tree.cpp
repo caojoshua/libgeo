@@ -1,4 +1,5 @@
 extern "C" {
+#include "data_structure/hash.h"
 #include "data_structure/red_black_tree.h"
 #include "data_structure/vector.h"
 }
@@ -142,38 +143,40 @@ void rb_tree_test_increasing_stride(unsigned n) {
 void rb_tree_test_random(unsigned n) {
   srand(0);
   RedBlackTree *tree = red_black_tree_new();
-  Vector *numbers = vector_newn(n);
+  // Maintain a vector to keep track of which element is at each index. Maintain
+  // a hash structure to check that there are no duplicates.
+  Vector *numbers_vec = vector_newn(n);
+  Hash *numbers_hash = hash_new();
   for (unsigned i = 0; i < n; ++i) {
-    void *r = (void *)(long)rand();
-    // TODO: Make sure we have unique numbers by checking if the number exists
-    // in a hash structure. We get lucky with our seed that we do not have any
-    // random numbers right now with 2^32 possible numbers.
-    /* void *r; */
-    /* do { */
-    /*   r = (void *)(long)rand(); */
-    /* } while (vector_contains(numbers, r)); */
+    void *r;
+    do {
+      r = (void *)(long)rand();
+    } while (hash_contains(numbers_hash, r));
     red_black_tree_insert(tree, (void *)(long)r);
-    vector_push(numbers, r);
+    vector_push(numbers_vec, r);
+    hash_insert(numbers_hash, r);
     red_black_tree_validate_expensive(tree);
     ASSERT_EQ(tree->size, i + 1);
   }
+  hash_free(numbers_hash);
+
   for (unsigned i = 0; i < n; ++i) {
-    test_get_true(tree, (long)numbers->data[i]);
+    test_get_true(tree, (long)numbers_vec->data[i]);
   }
 
   for (unsigned i = 0; i < n; i += STRIDE) {
-    void *element = (void *)(long)numbers->data[i];
+    void *element = (void *)(long)numbers_vec->data[i];
     ASSERT_EQ(red_black_tree_delete(tree, element), element);
   }
   for (unsigned i = 0; i < n; ++i) {
     if (i % STRIDE == 0) {
-      test_get_false(tree, (long)numbers->data[i]);
+      test_get_false(tree, (long)numbers_vec->data[i]);
     } else {
-      test_get_true(tree, (long)numbers->data[i]);
+      test_get_true(tree, (long)numbers_vec->data[i]);
     }
   }
 
-  vector_free(numbers);
+  vector_free(numbers_vec);
   red_black_tree_validate_expensive(tree);
   red_black_tree_free(tree);
 }
