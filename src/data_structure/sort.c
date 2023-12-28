@@ -3,6 +3,19 @@
 #include <stdlib.h>
 #include <string.h>
 
+void **insertion_sort(void **data, unsigned n) {
+  for (unsigned i = 0; i < n - 1; ++i) {
+    for (unsigned j = i + 1; j > 0; --j) {
+      if (data[j] < data[j - 1]) {
+        void *t = data[j];
+        data[j] = data[j - 1];
+        data[j - 1] = t;
+      }
+    }
+  }
+  return data;
+}
+
 void merge_sortr(void **data, void **data_copy, unsigned n) {
   if (n <= 1) {
     return;
