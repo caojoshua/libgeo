@@ -45,6 +45,7 @@ static void test_sort(sort_t sort, unsigned n) {
 static void test_length(unsigned n) {
   test_sort(merge_sort, n);
   test_sort(quick_sort, n);
+  test_sort(selection_sort, n);
 }
 
 TEST(Sort, Length1) { test_length(1); }

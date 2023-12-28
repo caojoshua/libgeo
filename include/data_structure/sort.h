@@ -5,5 +5,6 @@ typedef void **(*sort_t)(void **, unsigned);
 
 void **merge_sort(void **data, unsigned n);
 void **quick_sort(void **data, unsigned n);
+void **selection_sort(void **data, unsigned n);
 
 #endif

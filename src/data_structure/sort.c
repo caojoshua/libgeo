@@ -75,3 +75,20 @@ void **quick_sort(void **data, unsigned n) {
   return data;
 }
 
+void **selection_sort(void **data, unsigned n) {
+  if (n <= 1) {
+    return data;
+  }
+  for (unsigned i = 0; i < n; ++i) {
+    unsigned min = i;
+    for (unsigned j = i + 1; j < n; ++j) {
+      if (data[j] < data[min]) {
+        min = j;
+      }
+    }
+    void *t = data[min];
+    data[min] = data[i];
+    data[i] = t;
+  }
+  return data;
+}
