@@ -1,15 +1,9 @@
 #include "data_structure/priority_queue.h"
+#include "data_structure/util.h"
 #include <assert.h>
 #include <stdlib.h>
 
 const unsigned DEFAUL_INITIAL_CAPACITY = 16;
-
-void swap(void **a, void **b) {
-  assert(a && b && "cannot swap null addresses");
-  void *t = *a;
-  *a = *b;
-  *b = t;
-}
 
 // Recursive routine after pushing an element onto the bottom of the queue. We
 // need to bubble the new element to the right index.

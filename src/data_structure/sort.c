@@ -1,5 +1,6 @@
 #include "data_structure/sort.h"
 #include "data_structure/red_black_tree.h"
+#include "data_structure/util.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,9 +11,7 @@ void **bubble_sort(void **data, unsigned n) {
     changed = false;
     for (unsigned i = 0; i < n - 1; ++i) {
       if (data[i] > data[i + 1]) {
-        void *t = data[i];
-        data[i] = data[i + 1];
-        data[i + 1] = t;
+        swap(data + i, data + i + 1);
         changed = true;
       }
     }
@@ -29,9 +28,7 @@ void heapify(void **data, unsigned n, unsigned i) {
   unsigned right_index = left_index + 1;
   if (right_index == n) {
     if (data[left_index] > data[i]) {
-      void *t = data[i];
-      data[i] = data[left_index];
-      data[left_index] = t;
+      swap(data + i, data + left_index);
     }
     return;
   }
@@ -39,17 +36,13 @@ void heapify(void **data, unsigned n, unsigned i) {
   unsigned greater_index =
       data[left_index] > data[right_index] ? left_index : right_index;
   if (data[greater_index] > data[i]) {
-    void *t = data[i];
-    data[i] = data[greater_index];
-    data[greater_index] = t;
+    swap(data + i, data + greater_index);
     heapify(data, n, greater_index);
   }
 }
 
 void heap_pop(void **data, unsigned n) {
-  void *t = data[0];
-  data[0] = data[n - 1];
-  data[n - 1] = t;
+  swap(data, data + n - 1);
   heapify(data, n - 1, 0);
 }
 
@@ -70,9 +63,7 @@ void **insertion_sort(void **data, unsigned n) {
   for (unsigned i = 0; i < n - 1; ++i) {
     for (unsigned j = i + 1; j > 0; --j) {
       if (data[j] < data[j - 1]) {
-        void *t = data[j];
-        data[j] = data[j - 1];
-        data[j - 1] = t;
+        swap(data + j, data + j - 1);
       }
     }
   }
@@ -138,9 +129,7 @@ void **quick_sort(void **data, unsigned n) {
   for (unsigned i = 1; i < n; ++i) {
     if (data[i] < pivot) {
       ++num_left;
-      void *t = data[num_left];
-      data[num_left] = data[i];
-      data[i] = t;
+      swap(data + num_left, data + i);
     }
   }
 
@@ -162,9 +151,7 @@ void **selection_sort(void **data, unsigned n) {
         min = j;
       }
     }
-    void *t = data[min];
-    data[min] = data[i];
-    data[i] = t;
+    swap(data + i, data + min);
   }
   return data;
 }

@@ -46,6 +46,7 @@
 // used for deletion).
 //
 #include "data_structure/red_black_tree.h"
+#include "data_structure/util.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -603,9 +604,7 @@ void node_delete(RedBlackTree *tree, Node *n) {
   assert(pred->parent &&
          "n's predecessor cannot be the root and must have a parent");
 
-  void *t = n->val;
-  n->val = pred->val;
-  pred->val = t;
+  swap(&n->val, &pred->val);
 
   node_delete(tree, pred);
 }
