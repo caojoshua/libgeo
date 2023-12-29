@@ -44,6 +44,7 @@ static void test_sort(sort_t sort, unsigned n) {
 
 static void test_length(unsigned n) {
   test_sort(bubble_sort, n);
+  test_sort(heap_sort, n);
   test_sort(insertion_sort, n);
   test_sort(merge_sort, n);
   test_sort(quick_sort, n);

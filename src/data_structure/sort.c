@@ -20,6 +20,52 @@ void **bubble_sort(void **data, unsigned n) {
   return data;
 }
 
+void heapify(void **data, unsigned n, unsigned i) {
+  unsigned left_index = i * 2 + 1;
+  if (left_index >= n) {
+    return;
+  }
+
+  unsigned right_index = left_index + 1;
+  if (right_index == n) {
+    if (data[left_index] > data[i]) {
+      void *t = data[i];
+      data[i] = data[left_index];
+      data[left_index] = t;
+    }
+    return;
+  }
+
+  unsigned greater_index =
+      data[left_index] > data[right_index] ? left_index : right_index;
+  if (data[greater_index] > data[i]) {
+    void *t = data[i];
+    data[i] = data[greater_index];
+    data[greater_index] = t;
+    heapify(data, n, greater_index);
+  }
+}
+
+void heap_pop(void **data, unsigned n) {
+  void *t = data[0];
+  data[0] = data[n - 1];
+  data[n - 1] = t;
+  heapify(data, n - 1, 0);
+}
+
+void **heap_sort(void **data, unsigned n) {
+  assert(data && "cannot sort NULL data");
+  for (unsigned i = n; i > 0; --i) {
+    heapify(data, n, i - 1);
+  }
+
+  for (unsigned i = n; i > 0; --i) {
+    heap_pop(data, i);
+  }
+
+  return data;
+}
+
 void **insertion_sort(void **data, unsigned n) {
   for (unsigned i = 0; i < n - 1; ++i) {
     for (unsigned j = i + 1; j > 0; --j) {
