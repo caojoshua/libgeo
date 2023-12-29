@@ -3,6 +3,22 @@
 #include <stdlib.h>
 #include <string.h>
 
+void **bubble_sort(void **data, unsigned n) {
+  bool changed;
+  do {
+    changed = false;
+    for (unsigned i = 0; i < n - 1; ++i) {
+      if (data[i] > data[i + 1]) {
+        void *t = data[i];
+        data[i] = data[i + 1];
+        data[i + 1] = t;
+        changed = true;
+      }
+    }
+  } while (changed);
+  return data;
+}
+
 void **insertion_sort(void **data, unsigned n) {
   for (unsigned i = 0; i < n - 1; ++i) {
     for (unsigned j = i + 1; j > 0; --j) {
