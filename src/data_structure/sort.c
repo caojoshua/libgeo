@@ -1,4 +1,5 @@
 #include "data_structure/sort.h"
+#include "data_structure/red_black_tree.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -118,6 +119,22 @@ void **selection_sort(void **data, unsigned n) {
     void *t = data[min];
     data[min] = data[i];
     data[i] = t;
+  }
+  return data;
+}
+
+void **tree_sort(void **data, unsigned n) {
+  RedBlackTree *tree = red_black_tree_new();
+  for (unsigned i = 0; i < n; ++i) {
+    red_black_tree_insert(tree, data[i]);
+  }
+  Optional iter = red_black_tree_min(tree);
+  unsigned i = 0;
+  while (i < n) {
+    assert(iter.present && "tree should have n values");
+    data[i] = iter.val;
+    iter = red_black_tree_succ(tree, iter.val);
+    ++i;
   }
   return data;
 }

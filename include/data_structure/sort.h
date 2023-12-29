@@ -8,5 +8,6 @@ void **insertion_sort(void **data, unsigned n);
 void **merge_sort(void **data, unsigned n);
 void **quick_sort(void **data, unsigned n);
 void **selection_sort(void **data, unsigned n);
+void **tree_sort(void **data, unsigned n);
 
 #endif

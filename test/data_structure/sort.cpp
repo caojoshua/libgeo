@@ -48,6 +48,7 @@ static void test_length(unsigned n) {
   test_sort(merge_sort, n);
   test_sort(quick_sort, n);
   test_sort(selection_sort, n);
+  test_sort(tree_sort, n);
 }
 
 TEST(Sort, Length1) { test_length(1); }
