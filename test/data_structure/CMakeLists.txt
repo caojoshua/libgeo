@@ -1,16 +1,7 @@
-add_executable(
-  datastruct_test
+target_sources(geotest PRIVATE
   hash.cpp
   priority_queue.cpp
   red_black_tree.cpp
   sort.cpp
   vector.cpp
   )
-
-target_link_libraries(
-  datastruct_test
-  PUBLIC geodatastruct
-  GTest::gtest_main
-  )
-
-gtest_discover_tests(datastruct_test)

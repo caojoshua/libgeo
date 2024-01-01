@@ -1,5 +1,4 @@
-target_sources(geometry_test PRIVATE
-  line.cpp
+target_sources(geotest PRIVATE
   point.cpp
   segment.cpp
   )
