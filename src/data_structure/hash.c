@@ -33,7 +33,6 @@ Ordering node_cmp(void *a, void *b) {
 
 static void validate(Hash *hash) {
   assert(hash && "hash expected to be non-null");
-  assert(hash->data && "hash's data should always be initialized");
   assert(hash->capacity > 0 && "hash's capacity should always be greater than zero");
   assert(hash->size < hash->capacity * hash->load_factor && "hash should have been resized");
 }
@@ -50,31 +49,38 @@ static Node *node_new(void *key, void *pair) {
 // Used for temporary nodes that will not be inserted i.e. search, deletion.
 Node key_node_new(void *key) { return (Node){.key = key}; }
 
+static void hash_init_data(Hash *hash) {
+  for (unsigned i = 0; i < hash->capacity; ++i) {
+    red_black_tree_initc(&hash->data[i], node_cmp);
+  }
+}
+
 Hash *hash_new() { return hash_newf(pointer_hashfunc); }
 
 Hash *hash_newf(hashfunc_t f) {
   Hash *hash = malloc(sizeof(Hash));
   *hash = (Hash){
-      .data = calloc(sizeof(RedBlackTree *), DEFAULT_INITIAL_CAPACITY),
+      .data = malloc(sizeof(RedBlackTree) * DEFAULT_INITIAL_CAPACITY),
       .hashfunc = f,
       .size = 0,
       .capacity = DEFAULT_INITIAL_CAPACITY,
       .load_factor = DEFAULT_LOAD_FACTOR,
   };
+  hash_init_data(hash);
   return hash;
 }
 
 void hash_free(Hash *hash) {
   validate(hash);
   for (unsigned i = 0; i < hash->capacity; ++i) {
-    RedBlackTree *tree = hash->data[i];
-    if (tree) {
-      Node **elements = (Node **)red_black_tree_elements(tree);
-      for (unsigned i = 0; i < tree->size; ++i) {
+    RedBlackTree tree = hash->data[i];
+    if (&tree) {
+      Node **elements = (Node **)red_black_tree_elements(&tree);
+      for (unsigned i = 0; i < tree.size; ++i) {
         free(elements[i]);
       }
       free(elements);
-      red_black_tree_free(tree);
+      red_black_tree_free(&tree);
     }
   }
   free(hash->data);
@@ -88,7 +94,7 @@ static unsigned bucket_at(Hash *hash, void *key) {
 }
 
 static RedBlackTree *tree_at(Hash *hash, void *key) {
-  return hash->data[bucket_at(hash, key)];
+  return &hash->data[bucket_at(hash, key)];
 }
 
 // Doubles the size of hash and copies over data from the old data buffer to the
@@ -96,26 +102,24 @@ static RedBlackTree *tree_at(Hash *hash, void *key) {
 static void hash_resize(Hash *hash) {
   // Initialize a new vector and copy over the nodes. We cannot realloc the
   // data because it would be hard to move nodes to the right place.
-  RedBlackTree **old_data = hash->data;
+  RedBlackTree *old_data = hash->data;
   unsigned old_capacity = hash->capacity;
   unsigned new_capacity = old_capacity * 2;
-  hash->data = calloc(sizeof(RedBlackTree *), new_capacity);
+  hash->data = malloc(sizeof(RedBlackTree) * new_capacity);
   hash->size = 0;
   hash->capacity = new_capacity;
+  hash_init_data(hash);
 
   for (unsigned i = 0; i < old_capacity; ++i) {
-    RedBlackTree *tree = old_data[i];
-    if (!tree) {
-      continue;
-    }
-    Node **elements = (Node **)red_black_tree_elements(tree);
-    for (unsigned i = 0; i < tree->size; ++i) {
+    RedBlackTree tree = old_data[i];
+    Node **elements = (Node **)red_black_tree_elements(&tree);
+    for (unsigned i = 0; i < tree.size; ++i) {
       Node *n = elements[i];
       hash_insert_pair(hash, n->key, n->val);
       free(n);
     }
     free(elements);
-    red_black_tree_free(tree);
+    red_black_tree_free(&tree);
   }
 
   validate(hash);
@@ -129,11 +133,7 @@ bool hash_insert(Hash *hash, void *key) {
 bool hash_insert_pair(Hash *hash, void *key, void *val) {
   validate(hash);
   unsigned bucket = bucket_at(hash, key);
-  RedBlackTree *tree = hash->data[bucket];
-  if (!tree) {
-    tree = red_black_tree_newc(node_cmp);
-    hash->data[bucket] = tree;
-  }
+  RedBlackTree *tree = &hash->data[bucket];
   if (red_black_tree_insert(tree, node_new(key, val))) {
     hash->size += 1;
     if (hash->size >= hash->capacity * hash->load_factor) {

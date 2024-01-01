@@ -157,16 +157,17 @@ void **selection_sort(void **data, unsigned n) {
 }
 
 void **tree_sort(void **data, unsigned n) {
-  RedBlackTree *tree = red_black_tree_new();
+  RedBlackTree tree;
+  red_black_tree_init(&tree);
   for (unsigned i = 0; i < n; ++i) {
-    red_black_tree_insert(tree, data[i]);
+    red_black_tree_insert(&tree, data[i]);
   }
-  Optional iter = red_black_tree_min(tree);
+  Optional iter = red_black_tree_min(&tree);
   unsigned i = 0;
   while (i < n) {
     assert(iter.present && "tree should have n values");
     data[i] = iter.val;
-    iter = red_black_tree_succ(tree, iter.val);
+    iter = red_black_tree_succ(&tree, iter.val);
     ++i;
   }
   return data;

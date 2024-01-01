@@ -1,5 +1,4 @@
 #include "geometry/structure/line.h"
-#include "geometry/structure/segment.h"
 #include "geometry/util.h"
 #include <math.h>
 

@@ -89,18 +89,16 @@ Node *node_new(void *val, Color color) {
   return n;
 }
 
-RedBlackTree *red_black_tree_new() {
-  return red_black_tree_newc(less_than_cmp);
+void red_black_tree_init(RedBlackTree *tree) {
+  red_black_tree_initc(tree, less_than_cmp);
 }
 
-RedBlackTree *red_black_tree_newc(cmp_t cmp) {
-  RedBlackTree *tree = malloc(sizeof(RedBlackTree));
+void red_black_tree_initc(RedBlackTree *tree, cmp_t cmp) {
   *tree = (RedBlackTree){
       .root = nullptr,
       .size = 0,
       .cmp = cmp,
   };
-  return tree;
 }
 
 void node_free(Node *n) {
@@ -115,7 +113,6 @@ void node_free(Node *n) {
 void red_black_tree_free(RedBlackTree *tree) {
   red_black_tree_validate(tree);
   node_free(tree->root);
-  free(tree);
 }
 
 Direction node_parent_direction(Node *n) {

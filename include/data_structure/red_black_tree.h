@@ -14,6 +14,8 @@ typedef struct {
 
 RedBlackTree *red_black_tree_new();
 RedBlackTree *red_black_tree_newc(cmp_t cmp);
+void red_black_tree_init(RedBlackTree *tree);
+void red_black_tree_initc(RedBlackTree *tree, cmp_t cmp);
 void red_black_tree_free(RedBlackTree *tree);
 bool red_black_tree_insert(RedBlackTree *tree, void *val);
 void *red_black_tree_delete(RedBlackTree *tree, void *val);

@@ -70,27 +70,29 @@ void test_delete_range(RedBlackTree *tree, unsigned n) {
 }
 
 void rb_tree_test_increasing(unsigned n) {
-  RedBlackTree *tree = red_black_tree_new();
+  RedBlackTree tree;
+  red_black_tree_init(&tree);
   for (unsigned long i = 0; i < n; ++i) {
-    ASSERT_TRUE(red_black_tree_insert(tree, (void *)i));
-    ASSERT_EQ(tree->size, i + 1);
+    ASSERT_TRUE(red_black_tree_insert(&tree, (void *)i));
+    ASSERT_EQ(tree.size, i + 1);
   }
-  test_contains_range(tree, n);
-  test_delete_range(tree, n);
-  red_black_tree_validate_expensive(tree);
-  red_black_tree_free(tree);
+  test_contains_range(&tree, n);
+  test_delete_range(&tree, n);
+  red_black_tree_validate_expensive(&tree);
+  red_black_tree_free(&tree);
 }
 
 void rb_tree_test_decreasing(unsigned n) {
-  RedBlackTree *tree = red_black_tree_new();
+  RedBlackTree tree;
+  red_black_tree_init(&tree);
   for (unsigned long i = n; i > 0; --i) {
-    ASSERT_TRUE(red_black_tree_insert(tree, (void *)(i - 1)));
-    ASSERT_EQ(tree->size, n - i + 1);
+    ASSERT_TRUE(red_black_tree_insert(&tree, (void *)(i - 1)));
+    ASSERT_EQ(tree.size, n - i + 1);
   }
-  test_contains_range(tree, n);
-  test_delete_range(tree, n);
-  red_black_tree_validate_expensive(tree);
-  red_black_tree_free(tree);
+  test_contains_range(&tree, n);
+  test_delete_range(&tree, n);
+  red_black_tree_validate_expensive(&tree);
+  red_black_tree_free(&tree);
 }
 
 void test_contains_range_stride(RedBlackTree *tree, unsigned n) {
@@ -131,18 +133,20 @@ void test_contains_range_stride(RedBlackTree *tree, unsigned n) {
 }
 
 void rb_tree_test_increasing_stride(unsigned n) {
-  RedBlackTree *tree = red_black_tree_new();
+  RedBlackTree tree;
+  red_black_tree_init(&tree);
   for (unsigned long i = STRIDE; i < n; i += STRIDE) {
-    ASSERT_TRUE(red_black_tree_insert(tree, (void *)i));
+    ASSERT_TRUE(red_black_tree_insert(&tree, (void *)i));
   }
-  test_contains_range_stride(tree, n);
-  red_black_tree_validate_expensive(tree);
-  red_black_tree_free(tree);
+  test_contains_range_stride(&tree, n);
+  red_black_tree_validate_expensive(&tree);
+  red_black_tree_free(&tree);
 }
 
 void rb_tree_test_random(unsigned n) {
   srand(0);
-  RedBlackTree *tree = red_black_tree_new();
+  RedBlackTree tree;
+  red_black_tree_init(&tree);
   // Maintain a vector to keep track of which element is at each index. Maintain
   // a hash structure to check that there are no duplicates.
   Vector numbers_vec;
@@ -153,33 +157,33 @@ void rb_tree_test_random(unsigned n) {
     do {
       r = (void *)(long)rand();
     } while (hash_contains(numbers_hash, r));
-    red_black_tree_insert(tree, (void *)(long)r);
+    red_black_tree_insert(&tree, (void *)(long)r);
     vector_push(&numbers_vec, r);
     hash_insert(numbers_hash, r);
-    red_black_tree_validate_expensive(tree);
-    ASSERT_EQ(tree->size, i + 1);
+    red_black_tree_validate_expensive(&tree);
+    ASSERT_EQ(tree.size, i + 1);
   }
   hash_free(numbers_hash);
 
   for (unsigned i = 0; i < n; ++i) {
-    test_get_true(tree, (long)numbers_vec.data[i]);
+    test_get_true(&tree, (long)numbers_vec.data[i]);
   }
 
   for (unsigned i = 0; i < n; i += STRIDE) {
     void *element = (void *)(long)numbers_vec.data[i];
-    ASSERT_EQ(red_black_tree_delete(tree, element), element);
+    ASSERT_EQ(red_black_tree_delete(&tree, element), element);
   }
   for (unsigned i = 0; i < n; ++i) {
     if (i % STRIDE == 0) {
-      test_get_false(tree, (long)numbers_vec.data[i]);
+      test_get_false(&tree, (long)numbers_vec.data[i]);
     } else {
-      test_get_true(tree, (long)numbers_vec.data[i]);
+      test_get_true(&tree, (long)numbers_vec.data[i]);
     }
   }
 
   vector_free(&numbers_vec);
-  red_black_tree_validate_expensive(tree);
-  red_black_tree_free(tree);
+  red_black_tree_validate_expensive(&tree);
+  red_black_tree_free(&tree);
 }
 
 void rb_tree_test_length(unsigned n) {
@@ -190,64 +194,70 @@ void rb_tree_test_length(unsigned n) {
 }
 
 TEST(RedBlackTree, Empty) {
-  RedBlackTree *tree = red_black_tree_new();
-  EXPECT_FALSE(tree->root);
-  EXPECT_EQ(tree->size, 0);
-  EXPECT_FALSE(red_black_tree_min(tree).present);
-  EXPECT_FALSE(red_black_tree_max(tree).present);
-  test_get_false(tree, 0);
-  test_get_false(tree, 0xBA5);
-  test_get_false(tree, 0xF00);
-  red_black_tree_validate_expensive(tree);
-  red_black_tree_free(tree);
+  RedBlackTree tree;
+  red_black_tree_init(&tree);
+  EXPECT_FALSE(tree.root);
+  EXPECT_EQ(tree.size, 0);
+  EXPECT_FALSE(red_black_tree_min(&tree).present);
+  EXPECT_FALSE(red_black_tree_max(&tree).present);
+  test_get_false(&tree, 0);
+  test_get_false(&tree, 0xBA5);
+  test_get_false(&tree, 0xF00);
+  red_black_tree_validate_expensive(&tree);
+  red_black_tree_free(&tree);
 }
 
 
 TEST(RedBlackTree, TriangleRotationRight) {
-  RedBlackTree *tree = red_black_tree_new();
-  red_black_tree_insert(tree, NULL);
-  red_black_tree_insert(tree, (void *)2);
-  red_black_tree_insert(tree, (void *)1);
-  test_contains_range(tree, 3);
-  red_black_tree_free(tree);
+  RedBlackTree tree;
+  red_black_tree_init(&tree);
+  red_black_tree_insert(&tree, NULL);
+  red_black_tree_insert(&tree, (void *)2);
+  red_black_tree_insert(&tree, (void *)1);
+  test_contains_range(&tree, 3);
+  red_black_tree_free(&tree);
 }
 
 TEST(RedBlackTree, TriangleRotationLeft) {
-  RedBlackTree *tree = red_black_tree_new();
-  red_black_tree_insert(tree, (void *)2);
-  red_black_tree_insert(tree, NULL);
-  red_black_tree_insert(tree, (void *)1);
-  test_contains_range(tree, 3);
-  red_black_tree_free(tree);
+  RedBlackTree tree;
+  red_black_tree_init(&tree);
+  red_black_tree_insert(&tree, (void *)2);
+  red_black_tree_insert(&tree, NULL);
+  red_black_tree_insert(&tree, (void *)1);
+  test_contains_range(&tree, 3);
+  red_black_tree_free(&tree);
 }
 
 TEST(RedBlackTree, RecolorRight) {
-  RedBlackTree *tree = red_black_tree_new();
-  red_black_tree_insert(tree, (void *)1);
-  red_black_tree_insert(tree, NULL);
-  red_black_tree_insert(tree, (void *)2);
-  red_black_tree_insert(tree, (void *)3);
-  test_contains_range(tree, 4);
-  red_black_tree_free(tree);
+  RedBlackTree tree;
+  red_black_tree_init(&tree);
+  red_black_tree_insert(&tree, (void *)1);
+  red_black_tree_insert(&tree, NULL);
+  red_black_tree_insert(&tree, (void *)2);
+  red_black_tree_insert(&tree, (void *)3);
+  test_contains_range(&tree, 4);
+  red_black_tree_free(&tree);
 }
 
 TEST(RedBlackTree, RecolorLeft) {
-  RedBlackTree *tree = red_black_tree_new();
-  red_black_tree_insert(tree, (void *)2);
-  red_black_tree_insert(tree, (void *)3);
-  red_black_tree_insert(tree, NULL);
-  red_black_tree_insert(tree, (void *)1);
-  test_contains_range(tree, 4);
-  red_black_tree_free(tree);
+  RedBlackTree tree;
+  red_black_tree_init(&tree);
+  red_black_tree_insert(&tree, (void *)2);
+  red_black_tree_insert(&tree, (void *)3);
+  red_black_tree_insert(&tree, NULL);
+  red_black_tree_insert(&tree, (void *)1);
+  test_contains_range(&tree, 4);
+  red_black_tree_free(&tree);
 }
 
 TEST(RedBlackTree, Repeat) {
-  RedBlackTree *tree = red_black_tree_new();
-  ASSERT_TRUE(red_black_tree_insert(tree, NULL));
-  ASSERT_FALSE(red_black_tree_insert(tree, NULL));
-  ASSERT_FALSE(red_black_tree_insert(tree, NULL));
-  test_contains_range(tree, 1);
-  red_black_tree_free(tree);
+  RedBlackTree tree;
+  red_black_tree_init(&tree);
+  ASSERT_TRUE(red_black_tree_insert(&tree, NULL));
+  ASSERT_FALSE(red_black_tree_insert(&tree, NULL));
+  ASSERT_FALSE(red_black_tree_insert(&tree, NULL));
+  test_contains_range(&tree, 1);
+  red_black_tree_free(&tree);
 }
 
 TEST(RedBlackTree, Length1) { rb_tree_test_length(1); }

@@ -2,7 +2,6 @@
 #define HASH_H
 
 #include "data_structure/red_black_tree.h"
-#include "vector.h"
 
 typedef unsigned(*hashfunc_t)(void *);
 
@@ -14,7 +13,7 @@ static unsigned pointer_hashfunc(void *ptr) {
 }
 
 typedef struct {
-  RedBlackTree **data;
+  RedBlackTree *data;
   hashfunc_t hashfunc;
   unsigned size;
   unsigned capacity;
