@@ -6,7 +6,7 @@ extern "C" {
 void priority_queue_test_pop_order(PriorityQueue *pq, unsigned n) {
   for (unsigned long i = 0; i < n; ++i) {
     ASSERT_EQ((long)priority_queue_pop(pq), i);
-    ASSERT_EQ(pq->vec->size, n - i - 1);
+    ASSERT_EQ(pq->vec.size, n - i - 1);
   }
   priority_queue_free(pq);
 }
@@ -15,7 +15,7 @@ void priority_queue_test_increasing(unsigned n) {
   PriorityQueue *pq = priority_queue_new();
   for (unsigned long i = 0; i < n; ++i) {
     priority_queue_push(pq, (void *)i);
-    ASSERT_EQ(pq->vec->size, i + 1);
+    ASSERT_EQ(pq->vec.size, i + 1);
   }
   priority_queue_test_pop_order(pq, n);
 }
@@ -24,7 +24,7 @@ void priority_queue_test_decreasing(unsigned n) {
   PriorityQueue *pq = priority_queue_new();
   for (unsigned long i = n; i > 0; --i) {
     priority_queue_push(pq, (void *)(i - 1));
-    ASSERT_EQ(pq->vec->size, n - i + 1);
+    ASSERT_EQ(pq->vec.size, n - i + 1);
   }
   priority_queue_test_pop_order(pq, n);
 }
@@ -33,13 +33,13 @@ void priority_queue_test_random(unsigned n) {
   PriorityQueue *pq = priority_queue_new();
   for (unsigned long i = 0; i < n; ++i) {
     priority_queue_push(pq, (void *)(long)rand());
-    ASSERT_EQ(pq->vec->size, i + 1);
+    ASSERT_EQ(pq->vec.size, i + 1);
   }
   void *prev = priority_queue_pop(pq);
   for (unsigned i = 1; i < n; ++i) {
     void *curr = priority_queue_pop(pq);
     ASSERT_TRUE(prev <= curr);
-    ASSERT_EQ(pq->vec->size, n - i - 1);
+    ASSERT_EQ(pq->vec.size, n - i - 1);
     prev = curr;
   }
   priority_queue_free(pq);

@@ -5,7 +5,7 @@
 #include "vector.h"
 
 typedef struct {
-  Vector *vec;
+  Vector vec;
   cmp_t cmp;
 } PriorityQueue;
 

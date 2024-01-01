@@ -7,8 +7,8 @@ typedef struct {
   unsigned size;
 } Vector;
 
-Vector *vector_new();
-Vector *vector_newn(unsigned n);
+void vector_init(Vector *vec);
+void vector_initn(Vector *vec, unsigned n);
 
 void vector_push(Vector *vec, void *val);
 void *vector_pop_back(Vector *vec);

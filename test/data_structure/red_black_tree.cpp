@@ -145,7 +145,8 @@ void rb_tree_test_random(unsigned n) {
   RedBlackTree *tree = red_black_tree_new();
   // Maintain a vector to keep track of which element is at each index. Maintain
   // a hash structure to check that there are no duplicates.
-  Vector *numbers_vec = vector_newn(n);
+  Vector numbers_vec;
+  vector_initn(&numbers_vec, n);
   Hash *numbers_hash = hash_new();
   for (unsigned i = 0; i < n; ++i) {
     void *r;
@@ -153,7 +154,7 @@ void rb_tree_test_random(unsigned n) {
       r = (void *)(long)rand();
     } while (hash_contains(numbers_hash, r));
     red_black_tree_insert(tree, (void *)(long)r);
-    vector_push(numbers_vec, r);
+    vector_push(&numbers_vec, r);
     hash_insert(numbers_hash, r);
     red_black_tree_validate_expensive(tree);
     ASSERT_EQ(tree->size, i + 1);
@@ -161,22 +162,22 @@ void rb_tree_test_random(unsigned n) {
   hash_free(numbers_hash);
 
   for (unsigned i = 0; i < n; ++i) {
-    test_get_true(tree, (long)numbers_vec->data[i]);
+    test_get_true(tree, (long)numbers_vec.data[i]);
   }
 
   for (unsigned i = 0; i < n; i += STRIDE) {
-    void *element = (void *)(long)numbers_vec->data[i];
+    void *element = (void *)(long)numbers_vec.data[i];
     ASSERT_EQ(red_black_tree_delete(tree, element), element);
   }
   for (unsigned i = 0; i < n; ++i) {
     if (i % STRIDE == 0) {
-      test_get_false(tree, (long)numbers_vec->data[i]);
+      test_get_false(tree, (long)numbers_vec.data[i]);
     } else {
-      test_get_true(tree, (long)numbers_vec->data[i]);
+      test_get_true(tree, (long)numbers_vec.data[i]);
     }
   }
 
-  vector_free(numbers_vec);
+  vector_free(&numbers_vec);
   red_black_tree_validate_expensive(tree);
   red_black_tree_free(tree);
 }

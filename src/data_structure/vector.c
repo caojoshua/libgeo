@@ -1,20 +1,19 @@
 #include "data_structure/vector.h"
 #include "assert.h"
 #include "stdlib.h"
-#include <string.h>
 
 const int DEFAULT_INITIAL_CAPACITY = 16;
 
-Vector *vector_new() { return vector_newn(DEFAULT_INITIAL_CAPACITY); }
+void vector_init(Vector *vec) {
+  vector_initn(vec, DEFAULT_INITIAL_CAPACITY);
+}
 
-Vector *vector_newn(unsigned n) {
-  Vector *vec = malloc(sizeof(Vector));
+void vector_initn(Vector *vec, unsigned n) {
   *vec = (Vector){
       .data = malloc(sizeof(void *) * n),
       .size = 0,
       .capacity = n,
   };
-  return vec;
 }
 
 void vector_push(Vector *vec, void *val) {
@@ -56,7 +55,6 @@ void vector_resize(Vector *vec, int new_capacity) {
 void vector_free(Vector *vec) {
   vector_validate(vec);
   free(vec->data);
-  free(vec);
 }
 
 void vector_validate(Vector *vec) {
