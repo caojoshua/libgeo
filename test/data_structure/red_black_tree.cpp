@@ -151,19 +151,20 @@ void rb_tree_test_random(unsigned n) {
   // a hash structure to check that there are no duplicates.
   Vector numbers_vec;
   vector_initn(&numbers_vec, n);
-  Hash *numbers_hash = hash_new();
+  Hash numbers_hash;
+  hash_init(&numbers_hash);
   for (unsigned i = 0; i < n; ++i) {
     void *r;
     do {
       r = (void *)(long)rand();
-    } while (hash_contains(numbers_hash, r));
+    } while (hash_contains(&numbers_hash, r));
     red_black_tree_insert(&tree, (void *)(long)r);
     vector_push(&numbers_vec, r);
-    hash_insert(numbers_hash, r);
+    hash_insert(&numbers_hash, r);
     red_black_tree_validate_expensive(&tree);
     ASSERT_EQ(tree.size, i + 1);
   }
-  hash_free(numbers_hash);
+  hash_free(&numbers_hash);
 
   for (unsigned i = 0; i < n; ++i) {
     test_get_true(&tree, (long)numbers_vec.data[i]);

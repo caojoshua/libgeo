@@ -17,47 +17,49 @@ static void test_get_false(Hash *hash, unsigned long i) {
 }
 
 void hash_test_length_increment(unsigned n) {
-  Hash *hash = hash_new();
+  Hash hash;
+  hash_init(&hash);
   for (unsigned long i = 0; i < n; ++i) {
-    ASSERT_TRUE(hash_insert_pair(hash, (void *)i, (void *)i));
-    ASSERT_FALSE(hash_insert_pair(hash, (void *)i, (void *)i));
+    ASSERT_TRUE(hash_insert_pair(&hash, (void *)i, (void *)i));
+    ASSERT_FALSE(hash_insert_pair(&hash, (void *)i, (void *)i));
   }
   for (unsigned i = 0; i < n; ++i) {
-    test_get_true(hash, i);
+    test_get_true(&hash, i);
   }
-  test_get_false(hash, n);
+  test_get_false(&hash, n);
 
   for (unsigned long i = 0; i < n; i += STRIDE) {
-    ASSERT_EQ(hash_delete(hash, (void *)i), (void *)i);
-    test_get_false(hash, i);
+    ASSERT_EQ(hash_delete(&hash, (void *)i), (void *)i);
+    test_get_false(&hash, i);
   }
 
   for (unsigned i = 0; i < n; ++i) {
     if (i % STRIDE == 0) {
-      test_get_false(hash, i);
+      test_get_false(&hash, i);
     } else {
-      test_get_true(hash, i);
+      test_get_true(&hash, i);
     }
   }
-  hash_free(hash);
+  hash_free(&hash);
 }
 
 void hash_test_length_strided(unsigned n) {
-  Hash *hash = hash_new();
+  Hash hash;
+  hash_init(&hash);
   for (unsigned long i = 0; i < n; i += STRIDE) {
-    ASSERT_TRUE(hash_insert_pair(hash, (void *)i, (void *)i));
-    ASSERT_FALSE(hash_insert_pair(hash, (void *)i, (void *)i));
+    ASSERT_TRUE(hash_insert_pair(&hash, (void *)i, (void *)i));
+    ASSERT_FALSE(hash_insert_pair(&hash, (void *)i, (void *)i));
   }
-  test_get_false(hash, n);
+  test_get_false(&hash, n);
 
   for (unsigned i = 0; i < n; ++i) {
     if (i % STRIDE == 0) {
-      test_get_true(hash, i);
+      test_get_true(&hash, i);
     } else {
-      test_get_false(hash, i);
+      test_get_false(&hash, i);
     }
   }
-  hash_free(hash);
+  hash_free(&hash);
 }
 
 void hash_test_length(unsigned n) {

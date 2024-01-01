@@ -55,10 +55,9 @@ static void hash_init_data(Hash *hash) {
   }
 }
 
-Hash *hash_new() { return hash_newf(pointer_hashfunc); }
+void hash_init(Hash *hash) { hash_initf(hash, pointer_hashfunc); }
 
-Hash *hash_newf(hashfunc_t f) {
-  Hash *hash = malloc(sizeof(Hash));
+void hash_initf(Hash *hash, hashfunc_t f) {
   *hash = (Hash){
       .data = malloc(sizeof(RedBlackTree) * DEFAULT_INITIAL_CAPACITY),
       .hashfunc = f,
@@ -67,7 +66,6 @@ Hash *hash_newf(hashfunc_t f) {
       .load_factor = DEFAULT_LOAD_FACTOR,
   };
   hash_init_data(hash);
-  return hash;
 }
 
 void hash_free(Hash *hash) {
@@ -84,7 +82,6 @@ void hash_free(Hash *hash) {
     }
   }
   free(hash->data);
-  free(hash);
 }
 
 static unsigned bucket_at(Hash *hash, void *key) {

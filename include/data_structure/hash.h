@@ -20,8 +20,8 @@ typedef struct {
   float load_factor;
 } Hash;
 
-Hash *hash_new();
-Hash *hash_newf(hashfunc_t f);
+void hash_init(Hash *hash);
+void hash_initf(Hash *hash, hashfunc_t f);
 void hash_free(Hash *hash);
 
 bool hash_insert(Hash *hash, void *key);
