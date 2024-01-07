@@ -7,7 +7,7 @@ const unsigned DEFAUL_INITIAL_CAPACITY = 16;
 // Recursive routine after pushing an element onto the bottom of the queue. We
 // need to bubble the new element to the right index.
 void bubble_up(PriorityQueue *pq, unsigned index) {
-  priority_queue_validate(pq);
+  pq_validate(pq);
   assert(index <= pq->vec.size &&
          "PriorityQueue::bubble_up fix up out of bounds index");
 
@@ -28,7 +28,7 @@ void bubble_up(PriorityQueue *pq, unsigned index) {
 // previously bottom element is moved to the top. We need to bubble the top
 // element down to the right index.
 void bubble_down(PriorityQueue *pq, unsigned index) {
-  priority_queue_validate(pq);
+  pq_validate(pq);
   assert(index <= pq->vec.size &&
          "PriorityQueue::bubble_down out of bounds index");
 
@@ -77,8 +77,8 @@ void pq_initcn(PriorityQueue *pq, cmp_t cmp, unsigned n) {
   vector_initn(&pq->vec, n);
 }
 
-void priority_queue_push(PriorityQueue *pq, void *val) {
-  priority_queue_validate(pq);
+void pq_push(PriorityQueue *pq, void *val) {
+  pq_validate(pq);
   if (pq->vec.size == 0) {
     vector_push(&pq->vec, val);
     return;
@@ -88,8 +88,8 @@ void priority_queue_push(PriorityQueue *pq, void *val) {
   bubble_up(pq, pq->vec.size - 1);
 }
 
-void *priority_queue_pop(PriorityQueue *pq) {
-  priority_queue_validate(pq);
+void *pq_pop(PriorityQueue *pq) {
+  pq_validate(pq);
   if (pq->vec.size == 0) {
     return nullptr;
   }
@@ -104,12 +104,12 @@ void *priority_queue_pop(PriorityQueue *pq) {
   return front;
 }
 
-void priority_queue_free(PriorityQueue *pq) {
-  priority_queue_pop(pq);
+void pq_free(PriorityQueue *pq) {
+  pq_pop(pq);
   vector_free(&pq->vec);
 }
 
-void priority_queue_validate(PriorityQueue *pq) {
+void pq_validate(PriorityQueue *pq) {
   assert(pq && "pq should not be null");
   vector_validate(&pq->vec);
 }

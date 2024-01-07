@@ -3,96 +3,96 @@ extern "C" {
 }
 #include <gtest/gtest.h>
 
-void priority_queue_test_pop_order(PriorityQueue *pq, unsigned n) {
+void pq_test_pop_order(PriorityQueue *pq, unsigned n) {
   for (unsigned long i = 0; i < n; ++i) {
-    ASSERT_EQ((long)priority_queue_pop(pq), i);
+    ASSERT_EQ((long)pq_pop(pq), i);
     ASSERT_EQ(pq->vec.size, n - i - 1);
   }
-  priority_queue_free(pq);
+  pq_free(pq);
 }
 
-void priority_queue_test_increasing(unsigned n) {
+void pq_test_increasing(unsigned n) {
   PriorityQueue pq;
   pq_init(&pq);
   for (unsigned long i = 0; i < n; ++i) {
-    priority_queue_push(&pq, (void *)i);
+    pq_push(&pq, (void *)i);
     ASSERT_EQ(pq.vec.size, i + 1);
   }
-  priority_queue_test_pop_order(&pq, n);
+  pq_test_pop_order(&pq, n);
 }
 
-void priority_queue_test_decreasing(unsigned n) {
+void pq_test_decreasing(unsigned n) {
   PriorityQueue pq;
   pq_init(&pq);
   for (unsigned long i = n; i > 0; --i) {
-    priority_queue_push(&pq, (void *)(i - 1));
+    pq_push(&pq, (void *)(i - 1));
     ASSERT_EQ(pq.vec.size, n - i + 1);
   }
-  priority_queue_test_pop_order(&pq, n);
+  pq_test_pop_order(&pq, n);
 }
 
-void priority_queue_test_random(unsigned n) {
+void pq_test_random(unsigned n) {
   PriorityQueue pq;
   pq_init(&pq);
   for (unsigned long i = 0; i < n; ++i) {
-    priority_queue_push(&pq, (void *)(long)rand());
+    pq_push(&pq, (void *)(long)rand());
     ASSERT_EQ(pq.vec.size, i + 1);
   }
-  void *prev = priority_queue_pop(&pq);
+  void *prev = pq_pop(&pq);
   for (unsigned i = 1; i < n; ++i) {
-    void *curr = priority_queue_pop(&pq);
+    void *curr = pq_pop(&pq);
     ASSERT_TRUE(prev <= curr);
     ASSERT_EQ(pq.vec.size, n - i - 1);
     prev = curr;
   }
-  priority_queue_free(&pq);
+  pq_free(&pq);
 }
 
-void priority_queue_test_length(unsigned n) {
+void pq_test_length(unsigned n) {
   srand(time(NULL));
-  priority_queue_test_increasing(n);
-  priority_queue_test_decreasing(n);
-  priority_queue_test_random(n);
+  pq_test_increasing(n);
+  pq_test_decreasing(n);
+  pq_test_random(n);
 }
 
 TEST(PriorityQueueTest, Length0) {
   PriorityQueue pq;
   pq_init(&pq);
-  ASSERT_FALSE(priority_queue_pop(&pq));
-  priority_queue_free(&pq);
+  ASSERT_FALSE(pq_pop(&pq));
+  pq_free(&pq);
 }
 
 TEST(PriorityQueueTest, Length1) {
   PriorityQueue pq;
   pq_init(&pq);
-  priority_queue_push(&pq, (void *)1);
-  ASSERT_EQ((long)priority_queue_pop(&pq), 1);
-  priority_queue_free(&pq);
+  pq_push(&pq, (void *)1);
+  ASSERT_EQ((long)pq_pop(&pq), 1);
+  pq_free(&pq);
 }
 
 TEST(PriorityQueueTest, Length2) {
   PriorityQueue pq;
   pq_init(&pq);
-  priority_queue_push(&pq, (void *)1);
-  priority_queue_push(&pq, (void *)2);
-  ASSERT_EQ((long)priority_queue_pop(&pq), 1);
-  ASSERT_EQ((long)priority_queue_pop(&pq), 2);
-  priority_queue_free(&pq);
+  pq_push(&pq, (void *)1);
+  pq_push(&pq, (void *)2);
+  ASSERT_EQ((long)pq_pop(&pq), 1);
+  ASSERT_EQ((long)pq_pop(&pq), 2);
+  pq_free(&pq);
 }
 
 TEST(PriorityQueueTest, opposite) {
   PriorityQueue pq;
   pq_init(&pq);
-  priority_queue_push(&pq, (void *)2);
-  priority_queue_push(&pq, (void *)1);
-  ASSERT_EQ((long)priority_queue_pop(&pq), 1);
-  ASSERT_EQ((long)priority_queue_pop(&pq), 2);
-  priority_queue_free(&pq);
+  pq_push(&pq, (void *)2);
+  pq_push(&pq, (void *)1);
+  ASSERT_EQ((long)pq_pop(&pq), 1);
+  ASSERT_EQ((long)pq_pop(&pq), 2);
+  pq_free(&pq);
 }
 
-TEST(PriorityQueueTest, Length3) { priority_queue_test_length(3); }
-TEST(PriorityQueueTest, Length4) { priority_queue_test_length(4); }
-TEST(PriorityQueueTest, Length8) { priority_queue_test_length(8); }
-TEST(PriorityQueueTest, Length128) { priority_queue_test_length(128); }
-TEST(PriorityQueueTest, LengthBar) { priority_queue_test_length(0xBA5); }
-TEST(PriorityQueueTest, LengthFoo) { priority_queue_test_length(0xF00); }
+TEST(PriorityQueueTest, Length3) { pq_test_length(3); }
+TEST(PriorityQueueTest, Length4) { pq_test_length(4); }
+TEST(PriorityQueueTest, Length8) { pq_test_length(8); }
+TEST(PriorityQueueTest, Length128) { pq_test_length(128); }
+TEST(PriorityQueueTest, LengthBar) { pq_test_length(0xBA5); }
+TEST(PriorityQueueTest, LengthFoo) { pq_test_length(0xF00); }

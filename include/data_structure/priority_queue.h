@@ -14,9 +14,9 @@ void pq_initc(PriorityQueue *pq, cmp_t cmp);
 void pq_initn(PriorityQueue *pq, unsigned n);
 void pq_initcn(PriorityQueue *pq, cmp_t cmp, unsigned n);
 
-void priority_queue_push(PriorityQueue *pq, void *val);
-void *priority_queue_pop(PriorityQueue *pq);
-void priority_queue_free(PriorityQueue *pq);
-void priority_queue_validate(PriorityQueue *pq);
+void pq_push(PriorityQueue *pq, void *val);
+void *pq_pop(PriorityQueue *pq);
+void pq_free(PriorityQueue *pq);
+void pq_validate(PriorityQueue *pq);
 
 #endif
