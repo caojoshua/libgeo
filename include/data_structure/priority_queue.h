@@ -9,10 +9,10 @@ typedef struct {
   cmp_t cmp;
 } PriorityQueue;
 
-PriorityQueue *priority_queue_new();
-PriorityQueue *priority_queue_newc(cmp_t cmp);
-PriorityQueue *priority_queue_newn(unsigned n);
-PriorityQueue *priority_queue_newcn(cmp_t cmp, unsigned n);
+void pq_init(PriorityQueue *pq);
+void pq_initc(PriorityQueue *pq, cmp_t cmp);
+void pq_initn(PriorityQueue *pq, unsigned n);
+void pq_initcn(PriorityQueue *pq, cmp_t cmp, unsigned n);
 
 void priority_queue_push(PriorityQueue *pq, void *val);
 void *priority_queue_pop(PriorityQueue *pq);

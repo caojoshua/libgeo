@@ -1,7 +1,6 @@
 #include "data_structure/priority_queue.h"
 #include "data_structure/util.h"
 #include <assert.h>
-#include <stdlib.h>
 
 const unsigned DEFAUL_INITIAL_CAPACITY = 16;
 
@@ -59,25 +58,23 @@ void bubble_down(PriorityQueue *pq, unsigned index) {
   }
 }
 
-PriorityQueue *priority_queue_new() {
-  return priority_queue_newc(less_than_cmp);
+void pq_init(PriorityQueue *pq) {
+  pq_initc(pq, less_than_cmp);
 }
 
-PriorityQueue *priority_queue_newc(cmp_t c) {
-  return priority_queue_newcn(c, DEFAUL_INITIAL_CAPACITY);
+void pq_initc(PriorityQueue *pq, cmp_t cmp) {
+  pq_initcn(pq, less_than_cmp, DEFAUL_INITIAL_CAPACITY);
 }
 
-PriorityQueue *priority_queue_newn(unsigned n) {
-  return priority_queue_newcn(less_than_cmp, n);
+void pq_initn(PriorityQueue *pq, unsigned n) {
+  pq_initcn(pq, less_than_cmp, n);
 }
 
-PriorityQueue *priority_queue_newcn(cmp_t cmp, unsigned n) {
-  PriorityQueue *pq = malloc(sizeof(PriorityQueue));
+void pq_initcn(PriorityQueue *pq, cmp_t cmp, unsigned n) {
   *pq = (PriorityQueue){
       .cmp = cmp,
   };
   vector_initn(&pq->vec, n);
-  return pq;
 }
 
 void priority_queue_push(PriorityQueue *pq, void *val) {
@@ -110,7 +107,6 @@ void *priority_queue_pop(PriorityQueue *pq) {
 void priority_queue_free(PriorityQueue *pq) {
   priority_queue_pop(pq);
   vector_free(&pq->vec);
-  free(pq);
 }
 
 void priority_queue_validate(PriorityQueue *pq) {
