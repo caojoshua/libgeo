@@ -89,11 +89,11 @@ Node *node_new(void *val, Color color) {
   return n;
 }
 
-void red_black_tree_init(RedBlackTree *tree) {
-  red_black_tree_initc(tree, less_than_cmp);
+void rb_tree_init(RedBlackTree *tree) {
+  rb_tree_initc(tree, less_than_cmp);
 }
 
-void red_black_tree_initc(RedBlackTree *tree, cmp_t cmp) {
+void rb_tree_initc(RedBlackTree *tree, cmp_t cmp) {
   *tree = (RedBlackTree){
       .root = nullptr,
       .size = 0,
@@ -110,8 +110,8 @@ void node_free(Node *n) {
   free(n);
 }
 
-void red_black_tree_free(RedBlackTree *tree) {
-  red_black_tree_validate(tree);
+void rb_tree_free(RedBlackTree *tree) {
+  rb_tree_validate(tree);
   node_free(tree->root);
 }
 
@@ -341,8 +341,8 @@ bool node_insert(RedBlackTree *tree, Node *n, void *val) {
   return true;
 }
 
-bool red_black_tree_insert(RedBlackTree *tree, void *val) {
-  red_black_tree_validate(tree);
+bool rb_tree_insert(RedBlackTree *tree, void *val) {
+  rb_tree_validate(tree);
   if (!tree->root) {
     tree->root = node_new(val, BLACK);
     tree->size = 1;
@@ -606,8 +606,8 @@ void node_delete(RedBlackTree *tree, Node *n) {
   node_delete(tree, pred);
 }
 
-void *red_black_tree_delete(RedBlackTree *tree, void *val) {
-  red_black_tree_validate(tree);
+void *rb_tree_delete(RedBlackTree *tree, void *val) {
+  rb_tree_validate(tree);
   Node *n = node_search(tree->root, val, tree->cmp);
   if (!n) {
     return NULL;
@@ -618,27 +618,27 @@ void *red_black_tree_delete(RedBlackTree *tree, void *val) {
   return deleted_val;
 }
 
-void *red_black_tree_get(RedBlackTree *tree, void *val) {
-  red_black_tree_validate(tree);
+void *rb_tree_get(RedBlackTree *tree, void *val) {
+  rb_tree_validate(tree);
   Node *n = node_search(tree->root, val, tree->cmp);
   return n ? n->val : NULL;
 }
 
-bool red_black_tree_contains(RedBlackTree *tree, void *val) {
-  red_black_tree_validate(tree);
+bool rb_tree_contains(RedBlackTree *tree, void *val) {
+  rb_tree_validate(tree);
   return node_search(tree->root, val, tree->cmp);
 }
 
-Optional red_black_tree_min(RedBlackTree *tree) {
-  red_black_tree_validate(tree);
+Optional rb_tree_min(RedBlackTree *tree) {
+  rb_tree_validate(tree);
   if (!tree->root) {
     return optional_null();
   }
   return optional(node_leftmost(tree->root)->val);
 }
 
-Optional red_black_tree_max(RedBlackTree *tree) {
-  red_black_tree_validate(tree);
+Optional rb_tree_max(RedBlackTree *tree) {
+  rb_tree_validate(tree);
   if (!tree->root) {
     return optional_null();
   }
@@ -688,8 +688,8 @@ Optional node_pred(Node *n, void *val, cmp_t cmp) {
   return optional(n->val);
 }
 
-Optional red_black_tree_pred(RedBlackTree *tree, void *val) {
-  red_black_tree_validate(tree);
+Optional rb_tree_pred(RedBlackTree *tree, void *val) {
+  rb_tree_validate(tree);
   if (!tree->root) {
     return optional_null();
   }
@@ -727,27 +727,27 @@ Optional node_succ(Node *n, void *val, cmp_t cmp) {
   return optional(n->val);
 }
 
-Optional red_black_tree_succ(RedBlackTree *tree, void *val) {
-  red_black_tree_validate(tree);
+Optional rb_tree_succ(RedBlackTree *tree, void *val) {
+  rb_tree_validate(tree);
   if (!tree->root) {
     return optional_null();
   }
   return node_succ(tree->root, val, tree->cmp);
 }
 
-void **red_black_tree_elements(RedBlackTree *tree) {
-  red_black_tree_validate(tree);
+void **rb_tree_elements(RedBlackTree *tree) {
+  rb_tree_validate(tree);
   if (tree->size == 0) {
     return NULL;
   }
   void **elements = malloc(tree->size * sizeof(void *));
   void **elements_iter = elements;
-  Optional iter = red_black_tree_min(tree);
+  Optional iter = rb_tree_min(tree);
   assert(iter.present && "tree with size zero should have a minimum");
   do {
     *elements_iter = iter.val;
     ++elements_iter;
-    iter = red_black_tree_succ(tree, iter.val);
+    iter = rb_tree_succ(tree, iter.val);
   } while (iter.present);
   return elements;
 }
@@ -794,7 +794,7 @@ unsigned node_validate(Node *n, cmp_t cmp) {
 
 // Validates tree. Cannot be called in the middle of tree transformations i.e
 // insertion.
-void red_black_tree_validate(RedBlackTree *tree) {
+void rb_tree_validate(RedBlackTree *tree) {
   assert(tree);
   if (tree->root) {
     assert(!tree->root->parent && "root's parent should be NULL");
@@ -804,8 +804,8 @@ void red_black_tree_validate(RedBlackTree *tree) {
   }
 }
 
-void red_black_tree_validate_expensive(RedBlackTree *tree) {
-  red_black_tree_validate(tree);
+void rb_tree_validate_expensive(RedBlackTree *tree) {
+  rb_tree_validate(tree);
   if (tree->root) {
     node_validate(tree->root, tree->cmp);
   }

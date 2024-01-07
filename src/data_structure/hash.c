@@ -14,7 +14,6 @@
 // HashMap implementation.
 //
 #include "data_structure/hash.h"
-#include "data_structure/red_black_tree.h"
 #include <assert.h>
 #include <stdlib.h>
 
@@ -51,7 +50,7 @@ Node key_node_new(void *key) { return (Node){.key = key}; }
 
 static void hash_init_data(Hash *hash) {
   for (unsigned i = 0; i < hash->capacity; ++i) {
-    red_black_tree_initc(&hash->data[i], node_cmp);
+    rb_tree_initc(&hash->data[i], node_cmp);
   }
 }
 
@@ -73,12 +72,12 @@ void hash_free(Hash *hash) {
   for (unsigned i = 0; i < hash->capacity; ++i) {
     RedBlackTree tree = hash->data[i];
     if (&tree) {
-      Node **elements = (Node **)red_black_tree_elements(&tree);
+      Node **elements = (Node **)rb_tree_elements(&tree);
       for (unsigned i = 0; i < tree.size; ++i) {
         free(elements[i]);
       }
       free(elements);
-      red_black_tree_free(&tree);
+      rb_tree_free(&tree);
     }
   }
   free(hash->data);
@@ -109,14 +108,14 @@ static void hash_resize(Hash *hash) {
 
   for (unsigned i = 0; i < old_capacity; ++i) {
     RedBlackTree tree = old_data[i];
-    Node **elements = (Node **)red_black_tree_elements(&tree);
+    Node **elements = (Node **)rb_tree_elements(&tree);
     for (unsigned i = 0; i < tree.size; ++i) {
       Node *n = elements[i];
       hash_insert_pair(hash, n->key, n->val);
       free(n);
     }
     free(elements);
-    red_black_tree_free(&tree);
+    rb_tree_free(&tree);
   }
 
   validate(hash);
@@ -131,7 +130,7 @@ bool hash_insert_pair(Hash *hash, void *key, void *val) {
   validate(hash);
   unsigned bucket = bucket_at(hash, key);
   RedBlackTree *tree = &hash->data[bucket];
-  if (red_black_tree_insert(tree, node_new(key, val))) {
+  if (rb_tree_insert(tree, node_new(key, val))) {
     hash->size += 1;
     if (hash->size >= hash->capacity * hash->load_factor) {
       hash_resize(hash);
@@ -148,7 +147,7 @@ void *hash_delete(Hash *hash, void *key) {
     return NULL;
   }
   Node key_node = key_node_new(key);
-  Node *deleted_node = red_black_tree_delete(tree, &key_node);
+  Node *deleted_node = rb_tree_delete(tree, &key_node);
   if (deleted_node) {
     void *val = deleted_node->val;
     free(deleted_node);
@@ -165,7 +164,7 @@ void *hash_get(Hash *hash, void *key) {
     return NULL;
   }
   Node key_node = key_node_new(key);
-  Node *n = red_black_tree_get(tree, &key_node);
+  Node *n = rb_tree_get(tree, &key_node);
   return n ? n->val : NULL;
 }
 
@@ -176,5 +175,5 @@ bool hash_contains(Hash *hash, void *key) {
     return false;
   }
   Node key_node = key_node_new(key);
-  return red_black_tree_contains(tree, &key_node);
+  return rb_tree_contains(tree, &key_node);
 }

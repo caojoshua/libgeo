@@ -8,30 +8,30 @@ extern "C" {
 static const unsigned STRIDE = 5;
 
 static void test_get_true(RedBlackTree *tree, unsigned long i) {
-  ASSERT_TRUE(red_black_tree_contains(tree, (void *)i));
-  ASSERT_EQ(red_black_tree_get(tree, (void *)i), (void *)i);
+  ASSERT_TRUE(rb_tree_contains(tree, (void *)i));
+  ASSERT_EQ(rb_tree_get(tree, (void *)i), (void *)i);
 }
 
 static void test_get_false(RedBlackTree *tree, long i) {
-  ASSERT_FALSE(red_black_tree_contains(tree, (void *)i));
-  ASSERT_FALSE(red_black_tree_get(tree, (void *)i));
-  ASSERT_FALSE(red_black_tree_delete(tree, (void *)i));
+  ASSERT_FALSE(rb_tree_contains(tree, (void *)i));
+  ASSERT_FALSE(rb_tree_get(tree, (void *)i));
+  ASSERT_FALSE(rb_tree_delete(tree, (void *)i));
 }
 
 void test_contains_range(RedBlackTree *tree, unsigned n) {
   ASSERT_GT(n, 0);
   EXPECT_EQ(tree->size, n);
-  void **elements = red_black_tree_elements(tree);
+  void **elements = rb_tree_elements(tree);
   for (unsigned long i = 0; i < n; ++i) {
     test_get_true(tree, i);
     ASSERT_EQ((long)elements[i], i);
     if (i > 0) {
-      Optional pred = red_black_tree_pred(tree, (void *)i);
+      Optional pred = rb_tree_pred(tree, (void *)i);
       ASSERT_TRUE(pred.present);
       ASSERT_EQ((long)pred.val, (i - 1));
     }
     if (i < n - 1) {
-      Optional succ = red_black_tree_succ(tree, (void *)i);
+      Optional succ = rb_tree_succ(tree, (void *)i);
       ASSERT_TRUE(succ.present);
       ASSERT_EQ((long)succ.val, (i + 1));
     }
@@ -41,15 +41,15 @@ void test_contains_range(RedBlackTree *tree, unsigned n) {
   test_get_false(tree, -1);
   test_get_false(tree, n);
 
-  Optional min = red_black_tree_min(tree);
+  Optional min = rb_tree_min(tree);
   EXPECT_TRUE(min.present);
   EXPECT_EQ((long)min.val, 0);
-  Optional max = red_black_tree_max(tree);
+  Optional max = rb_tree_max(tree);
   EXPECT_TRUE(max.present);
   EXPECT_EQ((long)max.val, n - 1);
 
-  EXPECT_FALSE(red_black_tree_pred(tree, NULL).present);
-  Optional pred = red_black_tree_pred(tree, (void *)(long)(n));
+  EXPECT_FALSE(rb_tree_pred(tree, NULL).present);
+  Optional pred = rb_tree_pred(tree, (void *)(long)(n));
   EXPECT_TRUE(pred.present);
   EXPECT_EQ((long)pred.val, (long)(n - 1));
 }
@@ -57,7 +57,7 @@ void test_contains_range(RedBlackTree *tree, unsigned n) {
 void test_delete_range(RedBlackTree *tree, unsigned n) {
   ASSERT_GT(n, 0);
   for (unsigned long i = 0; i < n; i += STRIDE) {
-    ASSERT_EQ(red_black_tree_delete(tree, (void *)i), (void *)i);
+    ASSERT_EQ(rb_tree_delete(tree, (void *)i), (void *)i);
   }
   test_get_false(tree, n);
   for (unsigned i = 0; i < n; ++i) {
@@ -71,28 +71,28 @@ void test_delete_range(RedBlackTree *tree, unsigned n) {
 
 void rb_tree_test_increasing(unsigned n) {
   RedBlackTree tree;
-  red_black_tree_init(&tree);
+  rb_tree_init(&tree);
   for (unsigned long i = 0; i < n; ++i) {
-    ASSERT_TRUE(red_black_tree_insert(&tree, (void *)i));
+    ASSERT_TRUE(rb_tree_insert(&tree, (void *)i));
     ASSERT_EQ(tree.size, i + 1);
   }
   test_contains_range(&tree, n);
   test_delete_range(&tree, n);
-  red_black_tree_validate_expensive(&tree);
-  red_black_tree_free(&tree);
+  rb_tree_validate_expensive(&tree);
+  rb_tree_free(&tree);
 }
 
 void rb_tree_test_decreasing(unsigned n) {
   RedBlackTree tree;
-  red_black_tree_init(&tree);
+  rb_tree_init(&tree);
   for (unsigned long i = n; i > 0; --i) {
-    ASSERT_TRUE(red_black_tree_insert(&tree, (void *)(i - 1)));
+    ASSERT_TRUE(rb_tree_insert(&tree, (void *)(i - 1)));
     ASSERT_EQ(tree.size, n - i + 1);
   }
   test_contains_range(&tree, n);
   test_delete_range(&tree, n);
-  red_black_tree_validate_expensive(&tree);
-  red_black_tree_free(&tree);
+  rb_tree_validate_expensive(&tree);
+  rb_tree_free(&tree);
 }
 
 void test_contains_range_stride(RedBlackTree *tree, unsigned n) {
@@ -106,11 +106,11 @@ void test_contains_range_stride(RedBlackTree *tree, unsigned n) {
   for (unsigned long i = STRIDE; i <= max_val; i += STRIDE) {
     test_get_true(tree, i);
     for (unsigned long j = i + 1; j <= i + STRIDE; ++j) {
-      Optional pred = red_black_tree_pred(tree, (void *)j);
+      Optional pred = rb_tree_pred(tree, (void *)j);
       ASSERT_TRUE(pred.present);
       ASSERT_EQ((long)pred.val, i);
 
-      Optional succ = red_black_tree_succ(tree, (void *)(j - STRIDE - 1));
+      Optional succ = rb_tree_succ(tree, (void *)(j - STRIDE - 1));
       EXPECT_TRUE(succ.present);
       EXPECT_EQ((long)succ.val, i);
     }
@@ -120,33 +120,33 @@ void test_contains_range_stride(RedBlackTree *tree, unsigned n) {
   test_get_false(tree, max_val + 1);
   test_get_false(tree, n + STRIDE);
 
-  EXPECT_FALSE(red_black_tree_pred(tree, NULL).present);
-  Optional pred = red_black_tree_pred(tree, (void *)(long)(n + STRIDE));
+  EXPECT_FALSE(rb_tree_pred(tree, NULL).present);
+  Optional pred = rb_tree_pred(tree, (void *)(long)(n + STRIDE));
   ASSERT_TRUE(pred.present);
 
-  Optional min = red_black_tree_min(tree);
+  Optional min = rb_tree_min(tree);
   EXPECT_TRUE(min.present);
   EXPECT_EQ((long)min.val, STRIDE);
-  Optional max = red_black_tree_max(tree);
+  Optional max = rb_tree_max(tree);
   EXPECT_TRUE(max.present);
   EXPECT_EQ((long)max.val, max_val);
 }
 
 void rb_tree_test_increasing_stride(unsigned n) {
   RedBlackTree tree;
-  red_black_tree_init(&tree);
+  rb_tree_init(&tree);
   for (unsigned long i = STRIDE; i < n; i += STRIDE) {
-    ASSERT_TRUE(red_black_tree_insert(&tree, (void *)i));
+    ASSERT_TRUE(rb_tree_insert(&tree, (void *)i));
   }
   test_contains_range_stride(&tree, n);
-  red_black_tree_validate_expensive(&tree);
-  red_black_tree_free(&tree);
+  rb_tree_validate_expensive(&tree);
+  rb_tree_free(&tree);
 }
 
 void rb_tree_test_random(unsigned n) {
   srand(0);
   RedBlackTree tree;
-  red_black_tree_init(&tree);
+  rb_tree_init(&tree);
   // Maintain a vector to keep track of which element is at each index. Maintain
   // a hash structure to check that there are no duplicates.
   Vector numbers_vec;
@@ -158,10 +158,10 @@ void rb_tree_test_random(unsigned n) {
     do {
       r = (void *)(long)rand();
     } while (hash_contains(&numbers_hash, r));
-    red_black_tree_insert(&tree, (void *)(long)r);
+    rb_tree_insert(&tree, (void *)(long)r);
     vector_push(&numbers_vec, r);
     hash_insert(&numbers_hash, r);
-    red_black_tree_validate_expensive(&tree);
+    rb_tree_validate_expensive(&tree);
     ASSERT_EQ(tree.size, i + 1);
   }
   hash_free(&numbers_hash);
@@ -172,7 +172,7 @@ void rb_tree_test_random(unsigned n) {
 
   for (unsigned i = 0; i < n; i += STRIDE) {
     void *element = (void *)(long)numbers_vec.data[i];
-    ASSERT_EQ(red_black_tree_delete(&tree, element), element);
+    ASSERT_EQ(rb_tree_delete(&tree, element), element);
   }
   for (unsigned i = 0; i < n; ++i) {
     if (i % STRIDE == 0) {
@@ -183,8 +183,8 @@ void rb_tree_test_random(unsigned n) {
   }
 
   vector_free(&numbers_vec);
-  red_black_tree_validate_expensive(&tree);
-  red_black_tree_free(&tree);
+  rb_tree_validate_expensive(&tree);
+  rb_tree_free(&tree);
 }
 
 void rb_tree_test_length(unsigned n) {
@@ -196,69 +196,69 @@ void rb_tree_test_length(unsigned n) {
 
 TEST(RedBlackTree, Empty) {
   RedBlackTree tree;
-  red_black_tree_init(&tree);
+  rb_tree_init(&tree);
   EXPECT_FALSE(tree.root);
   EXPECT_EQ(tree.size, 0);
-  EXPECT_FALSE(red_black_tree_min(&tree).present);
-  EXPECT_FALSE(red_black_tree_max(&tree).present);
+  EXPECT_FALSE(rb_tree_min(&tree).present);
+  EXPECT_FALSE(rb_tree_max(&tree).present);
   test_get_false(&tree, 0);
   test_get_false(&tree, 0xBA5);
   test_get_false(&tree, 0xF00);
-  red_black_tree_validate_expensive(&tree);
-  red_black_tree_free(&tree);
+  rb_tree_validate_expensive(&tree);
+  rb_tree_free(&tree);
 }
 
 
 TEST(RedBlackTree, TriangleRotationRight) {
   RedBlackTree tree;
-  red_black_tree_init(&tree);
-  red_black_tree_insert(&tree, NULL);
-  red_black_tree_insert(&tree, (void *)2);
-  red_black_tree_insert(&tree, (void *)1);
+  rb_tree_init(&tree);
+  rb_tree_insert(&tree, NULL);
+  rb_tree_insert(&tree, (void *)2);
+  rb_tree_insert(&tree, (void *)1);
   test_contains_range(&tree, 3);
-  red_black_tree_free(&tree);
+  rb_tree_free(&tree);
 }
 
 TEST(RedBlackTree, TriangleRotationLeft) {
   RedBlackTree tree;
-  red_black_tree_init(&tree);
-  red_black_tree_insert(&tree, (void *)2);
-  red_black_tree_insert(&tree, NULL);
-  red_black_tree_insert(&tree, (void *)1);
+  rb_tree_init(&tree);
+  rb_tree_insert(&tree, (void *)2);
+  rb_tree_insert(&tree, NULL);
+  rb_tree_insert(&tree, (void *)1);
   test_contains_range(&tree, 3);
-  red_black_tree_free(&tree);
+  rb_tree_free(&tree);
 }
 
 TEST(RedBlackTree, RecolorRight) {
   RedBlackTree tree;
-  red_black_tree_init(&tree);
-  red_black_tree_insert(&tree, (void *)1);
-  red_black_tree_insert(&tree, NULL);
-  red_black_tree_insert(&tree, (void *)2);
-  red_black_tree_insert(&tree, (void *)3);
+  rb_tree_init(&tree);
+  rb_tree_insert(&tree, (void *)1);
+  rb_tree_insert(&tree, NULL);
+  rb_tree_insert(&tree, (void *)2);
+  rb_tree_insert(&tree, (void *)3);
   test_contains_range(&tree, 4);
-  red_black_tree_free(&tree);
+  rb_tree_free(&tree);
 }
 
 TEST(RedBlackTree, RecolorLeft) {
   RedBlackTree tree;
-  red_black_tree_init(&tree);
-  red_black_tree_insert(&tree, (void *)2);
-  red_black_tree_insert(&tree, (void *)3);
-  red_black_tree_insert(&tree, NULL);
-  red_black_tree_insert(&tree, (void *)1);
+  rb_tree_init(&tree);
+  rb_tree_insert(&tree, (void *)2);
+  rb_tree_insert(&tree, (void *)3);
+  rb_tree_insert(&tree, NULL);
+  rb_tree_insert(&tree, (void *)1);
   test_contains_range(&tree, 4);
-  red_black_tree_free(&tree);
+  rb_tree_free(&tree);
 }
 
 TEST(RedBlackTree, Repeat) {
   RedBlackTree tree;
-  red_black_tree_init(&tree);
-  ASSERT_TRUE(red_black_tree_insert(&tree, NULL));
-  ASSERT_FALSE(red_black_tree_insert(&tree, NULL));
-  ASSERT_FALSE(red_black_tree_insert(&tree, NULL));
+  rb_tree_init(&tree);
+  ASSERT_TRUE(rb_tree_insert(&tree, NULL));
+  ASSERT_FALSE(rb_tree_insert(&tree, NULL));
+  ASSERT_FALSE(rb_tree_insert(&tree, NULL));
   test_contains_range(&tree, 1);
-  red_black_tree_free(&tree);
+  rb_tree_free(&tree);
 }
 
 TEST(RedBlackTree, Length1) { rb_tree_test_length(1); }

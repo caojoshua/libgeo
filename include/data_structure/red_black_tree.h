@@ -12,22 +12,22 @@ typedef struct {
   cmp_t cmp;
 } RedBlackTree;
 
-RedBlackTree *red_black_tree_new();
-RedBlackTree *red_black_tree_newc(cmp_t cmp);
-void red_black_tree_init(RedBlackTree *tree);
-void red_black_tree_initc(RedBlackTree *tree, cmp_t cmp);
-void red_black_tree_free(RedBlackTree *tree);
-bool red_black_tree_insert(RedBlackTree *tree, void *val);
-void *red_black_tree_delete(RedBlackTree *tree, void *val);
-void *red_black_tree_get(RedBlackTree *tree, void *val);
-bool red_black_tree_contains(RedBlackTree *tree, void *val);
-Optional red_black_tree_min(RedBlackTree *tree);
-Optional red_black_tree_max(RedBlackTree *tree);
-Optional red_black_tree_pred(RedBlackTree *tree, void *val);
-Optional red_black_tree_succ(RedBlackTree *tree, void *val);
-void **red_black_tree_elements(RedBlackTree *tree);
+RedBlackTree *rb_tree_new();
+RedBlackTree *rb_tree_newc(cmp_t cmp);
+void rb_tree_init(RedBlackTree *tree);
+void rb_tree_initc(RedBlackTree *tree, cmp_t cmp);
+void rb_tree_free(RedBlackTree *tree);
+bool rb_tree_insert(RedBlackTree *tree, void *val);
+void *rb_tree_delete(RedBlackTree *tree, void *val);
+void *rb_tree_get(RedBlackTree *tree, void *val);
+bool rb_tree_contains(RedBlackTree *tree, void *val);
+Optional rb_tree_min(RedBlackTree *tree);
+Optional rb_tree_max(RedBlackTree *tree);
+Optional rb_tree_pred(RedBlackTree *tree, void *val);
+Optional rb_tree_succ(RedBlackTree *tree, void *val);
+void **rb_tree_elements(RedBlackTree *tree);
 
-void red_black_tree_validate(RedBlackTree *tree);
-void red_black_tree_validate_expensive(RedBlackTree *tree);
+void rb_tree_validate(RedBlackTree *tree);
+void rb_tree_validate_expensive(RedBlackTree *tree);
 
 #endif
