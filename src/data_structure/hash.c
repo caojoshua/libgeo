@@ -71,14 +71,12 @@ void hash_free(Hash *hash) {
   validate(hash);
   for (unsigned i = 0; i < hash->capacity; ++i) {
     RedBlackTree tree = hash->data[i];
-    if (&tree) {
-      Node **elements = (Node **)rb_tree_elements(&tree);
-      for (unsigned i = 0; i < tree.size; ++i) {
-        free(elements[i]);
-      }
-      free(elements);
-      rb_tree_free(&tree);
+    Node **elements = (Node **)rb_tree_elements(&tree);
+    for (unsigned i = 0; i < tree.size; ++i) {
+      free(elements[i]);
     }
+    free(elements);
+    rb_tree_free(&tree);
   }
   free(hash->data);
 }
@@ -130,13 +128,15 @@ bool hash_insert_pair(Hash *hash, void *key, void *val) {
   validate(hash);
   unsigned bucket = bucket_at(hash, key);
   RedBlackTree *tree = &hash->data[bucket];
-  if (rb_tree_insert(tree, node_new(key, val))) {
+  Node *n = node_new(key, val);
+  if (rb_tree_insert(tree, n)) {
     hash->size += 1;
     if (hash->size >= hash->capacity * hash->load_factor) {
       hash_resize(hash);
     }
     return true;
   }
+  free(n);
   return false;
 }
 

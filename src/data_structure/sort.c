@@ -170,5 +170,6 @@ void **tree_sort(void **data, unsigned n) {
     iter = rb_tree_succ(&tree, iter.val);
     ++i;
   }
+  rb_tree_free(&tree);
   return data;
 }
