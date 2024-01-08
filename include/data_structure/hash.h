@@ -1,27 +1,32 @@
 #ifndef HASH_H
 #define HASH_H
 
-#include "data_structure/red_black_tree.h"
-
 typedef unsigned(*hashfunc_t)(void *);
+typedef bool(*eqfunc_t)(void *, void *);
 
 // Hash function for pointers. Often times pointers are word aligned, so rather
 // than using the raw address, we use its word address. It gets more complicated
 // in theory, but this is fine for now.
-static unsigned pointer_hashfunc(void *ptr) {
+static unsigned ptr_hash(void *ptr) {
   return (long)ptr / sizeof(void *);
 }
 
+static bool ptr_eq(void *a, void *b) {
+  return a == b;
+}
+
+typedef struct Node Node;
+
 typedef struct {
-  RedBlackTree *data;
+  Node **data;
   hashfunc_t hashfunc;
+  eqfunc_t eqfunc;
   unsigned size;
   unsigned capacity;
   float load_factor;
 } Hash;
 
-void hash_init(Hash *hash);
-void hash_initf(Hash *hash, hashfunc_t f);
+void hash_init(Hash *hash, hashfunc_t h, eqfunc_t e);
 void hash_free(Hash *hash);
 
 bool hash_insert(Hash *hash, void *key);

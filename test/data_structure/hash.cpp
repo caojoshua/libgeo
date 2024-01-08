@@ -18,7 +18,7 @@ static void test_get_false(Hash *hash, unsigned long i) {
 
 void hash_test_length_increment(unsigned n) {
   Hash hash;
-  hash_init(&hash);
+  hash_init(&hash, NULL, NULL);
   for (unsigned long i = 0; i < n; ++i) {
     ASSERT_TRUE(hash_insert_pair(&hash, (void *)i, (void *)i));
     ASSERT_FALSE(hash_insert_pair(&hash, (void *)i, (void *)i));
@@ -45,7 +45,7 @@ void hash_test_length_increment(unsigned n) {
 
 void hash_test_length_strided(unsigned n) {
   Hash hash;
-  hash_init(&hash);
+  hash_init(&hash, NULL, NULL);
   for (unsigned long i = 0; i < n; i += STRIDE) {
     ASSERT_TRUE(hash_insert_pair(&hash, (void *)i, (void *)i));
     ASSERT_FALSE(hash_insert_pair(&hash, (void *)i, (void *)i));

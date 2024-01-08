@@ -152,7 +152,7 @@ void rb_tree_test_random(unsigned n) {
   Vector numbers_vec;
   vector_initn(&numbers_vec, n);
   Hash numbers_hash;
-  hash_init(&numbers_hash);
+  hash_init(&numbers_hash, NULL, NULL);
   for (unsigned i = 0; i < n; ++i) {
     void *r;
     do {

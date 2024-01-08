@@ -20,15 +20,18 @@
 const static unsigned DEFAULT_INITIAL_CAPACITY = 1 << 4;
 const static float DEFAULT_LOAD_FACTOR = 0.75;
 
-typedef struct {
+struct Node {
   void *key;
   void *val;
-} Node;
+  Node *next;
+  Node *prev;
+};
 
-Ordering node_cmp(void *a, void *b) {
-  assert(a && b && "cannot compare null nodes");
-  return less_than_cmp(((Node *)a)->key, ((Node *)b)->key);
-}
+typedef struct {
+  Node *n;
+  bool found; // is true if we found the node we are looking for, false if it is
+              // the last node in the same bucket
+} NodeGetRes;
 
 static void validate(Hash *hash) {
   assert(hash && "hash expected to be non-null");
@@ -36,47 +39,26 @@ static void validate(Hash *hash) {
   assert(hash->size < hash->capacity * hash->load_factor && "hash should have been resized");
 }
 
-static Node *node_new(void *key, void *pair) {
-  Node *n = malloc(sizeof(Node));
-  *n = (Node){
-      .key = key,
-      .val = pair,
-  };
-  return n;
-}
-
-// Used for temporary nodes that will not be inserted i.e. search, deletion.
-Node key_node_new(void *key) { return (Node){.key = key}; }
-
-static void hash_init_data(Hash *hash) {
-  for (unsigned i = 0; i < hash->capacity; ++i) {
-    rb_tree_initc(&hash->data[i], node_cmp);
-  }
-}
-
-void hash_init(Hash *hash) { hash_initf(hash, pointer_hashfunc); }
-
-void hash_initf(Hash *hash, hashfunc_t f) {
+void hash_init(Hash *hash, hashfunc_t h, eqfunc_t e) {
   *hash = (Hash){
-      .data = malloc(sizeof(RedBlackTree) * DEFAULT_INITIAL_CAPACITY),
-      .hashfunc = f,
+      .data = calloc(DEFAULT_INITIAL_CAPACITY, sizeof(Node *)),
+      .hashfunc = h ? h : ptr_hash,
+      .eqfunc = e ? e : ptr_eq,
       .size = 0,
       .capacity = DEFAULT_INITIAL_CAPACITY,
       .load_factor = DEFAULT_LOAD_FACTOR,
   };
-  hash_init_data(hash);
 }
 
 void hash_free(Hash *hash) {
   validate(hash);
   for (unsigned i = 0; i < hash->capacity; ++i) {
-    RedBlackTree tree = hash->data[i];
-    Node **elements = (Node **)rb_tree_elements(&tree);
-    for (unsigned i = 0; i < tree.size; ++i) {
-      free(elements[i]);
+    Node *n = hash->data[i];
+    while (n) {
+      Node *next = n->next;
+      free(n);
+      n = next;
     }
-    free(elements);
-    rb_tree_free(&tree);
   }
   free(hash->data);
 }
@@ -87,8 +69,8 @@ static unsigned bucket_at(Hash *hash, void *key) {
   return hashcode % hash->capacity;
 }
 
-static RedBlackTree *tree_at(Hash *hash, void *key) {
-  return &hash->data[bucket_at(hash, key)];
+static Node *node_at(Hash *hash, void *key) {
+  return hash->data[bucket_at(hash, key)];
 }
 
 // Doubles the size of hash and copies over data from the old data buffer to the
@@ -96,24 +78,23 @@ static RedBlackTree *tree_at(Hash *hash, void *key) {
 static void hash_resize(Hash *hash) {
   // Initialize a new vector and copy over the nodes. We cannot realloc the
   // data because it would be hard to move nodes to the right place.
-  RedBlackTree *old_data = hash->data;
+  Node **old_data = hash->data;
   unsigned old_capacity = hash->capacity;
   unsigned new_capacity = old_capacity * 2;
-  hash->data = malloc(sizeof(RedBlackTree) * new_capacity);
+  hash->data = calloc(new_capacity, sizeof(Node *));
   hash->size = 0;
   hash->capacity = new_capacity;
-  hash_init_data(hash);
 
   for (unsigned i = 0; i < old_capacity; ++i) {
-    RedBlackTree tree = old_data[i];
-    Node **elements = (Node **)rb_tree_elements(&tree);
-    for (unsigned i = 0; i < tree.size; ++i) {
-      Node *n = elements[i];
+    Node *n = old_data[i];
+    while (n) {
+      // TODO: we know the bucket. we can insert the nodes directly instead of
+      // allocating new nodes / freeing old nodes.
       hash_insert_pair(hash, n->key, n->val);
+      Node *next = n->next;
       free(n);
+      n = next;
     }
-    free(elements);
-    rb_tree_free(&tree);
   }
 
   validate(hash);
@@ -124,56 +105,70 @@ bool hash_insert(Hash *hash, void *key) {
   return hash_insert_pair(hash, key, NULL);
 }
 
-bool hash_insert_pair(Hash *hash, void *key, void *val) {
+NodeGetRes hash_get_node(Hash *hash, void *key) {
   validate(hash);
   unsigned bucket = bucket_at(hash, key);
-  RedBlackTree *tree = &hash->data[bucket];
-  Node *n = node_new(key, val);
-  if (rb_tree_insert(tree, n)) {
-    hash->size += 1;
-    if (hash->size >= hash->capacity * hash->load_factor) {
-      hash_resize(hash);
+  Node *n = hash->data[bucket];
+  Node *prev = NULL;
+  while (n) {
+    if (hash->eqfunc(key, n->key)) {
+      return (NodeGetRes){.n = n, .found = true};
     }
-    return true;
+    prev = n;
+    n = n->next;
   }
-  free(n);
-  return false;
+  return (NodeGetRes){.n = prev, .found = false};
+}
+
+bool hash_insert_pair(Hash *hash, void *key, void *val) {
+  validate(hash);
+  NodeGetRes res = hash_get_node(hash, key);
+  if (res.found) {
+    return false;
+  }
+  Node *new_node = malloc(sizeof(Node));
+  *new_node = (Node){.key = key, .val = val, .prev = res.n, .next = NULL};
+  if (res.n) {
+    res.n->next = new_node;
+  } else {
+    hash->data[bucket_at(hash, key)] = new_node;
+  }
+  ++hash->size;
+  if (hash->size >= hash->capacity * hash->load_factor) {
+    hash_resize(hash);
+  }
+  return true;
 }
 
 void *hash_delete(Hash *hash, void *key) {
   validate(hash);
-  RedBlackTree *tree = tree_at(hash, key);
-  if (!tree) {
+  NodeGetRes res = hash_get_node(hash, key);
+  Node *n = res.n;
+  if (!res.found) {
     return NULL;
   }
-  Node key_node = key_node_new(key);
-  Node *deleted_node = rb_tree_delete(tree, &key_node);
-  if (deleted_node) {
-    void *val = deleted_node->val;
-    free(deleted_node);
-    hash->size -= 1;
-    return val;
+  if (n->prev) {
+    n->prev->next = n->next;
+  } else {
+    hash->data[bucket_at(hash, key)] = n->next;
   }
-  return NULL;
+  if (n->next) {
+    n->next->prev = n->prev;
+  }
+  void *val = n->val;
+  free(n);
+  --hash->size;
+  return val;
 }
 
 void *hash_get(Hash *hash, void *key) {
   validate(hash);
-  RedBlackTree *tree = tree_at(hash, key);
-  if (!tree) {
-    return NULL;
-  }
-  Node key_node = key_node_new(key);
-  Node *n = rb_tree_get(tree, &key_node);
-  return n ? n->val : NULL;
+  NodeGetRes res = hash_get_node(hash, key);
+  return res.found ? res.n->val : NULL;
 }
 
 bool hash_contains(Hash *hash, void *key) {
   validate(hash);
-  RedBlackTree *tree = tree_at(hash, key);
-  if (!tree) {
-    return false;
-  }
-  Node key_node = key_node_new(key);
-  return rb_tree_contains(tree, &key_node);
+  NodeGetRes res = hash_get_node(hash, key);
+  return res.found;
 }
